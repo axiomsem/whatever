@@ -60,7 +60,11 @@ swresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src)
 {    
     const size_t txComp = 4;
 
-    swresult_t result = swfloatframe_init(dst, src->width, src->height, sizeof(dst->buffer[0]) * txComp);
+    swresult_t result =
+        swfloatframe_init(dst,
+                          src->width,
+                          src->height,
+                          sizeof(dst->buffer[0]) * txComp);
     
     if (result == SW_E_OK)
     {

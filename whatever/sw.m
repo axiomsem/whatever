@@ -41,13 +41,13 @@ void swfill(struct swrasterframe* frame)
 {
     vec2 abc[3];
     abc[0][0] = 300.0f;
-    abc[0][1] = 200.0f;
+    abc[0][1] = (float)frame->height - 200.0f;
     
     abc[1][0] = 400.0f;
-    abc[1][1] = 200.0f;
+    abc[1][1] = (float)frame->height - 200.0f;
     
     abc[2][0] = 350.0f;
-    abc[2][1] = 275.0f;
+    abc[2][1] = (float)frame->height - 275.0f;
     
     swcolor_t color = {
       255, 0, 0, 255
@@ -68,9 +68,10 @@ void swfill(struct swrasterframe* frame)
 
 void swrasterize(struct swrasterframe* frame, struct swtri_basic_vertex* triangle)
 {
-    for (size_t y = 0; y < frame->height; ++y) {
-        for (size_t x = 0; x < frame->width; ++x) {
-            vec2 coords = { (float)x, (float)y };
+    for (ssize_t y = 0; y < (ssize_t)frame->height; ++y) {
+        for (ssize_t x = 0; x < (ssize_t)frame->width; ++x) {
+            vec2 coords =
+            { (float)x, (float)y };
 
             bool is_in_tri = true;
             
@@ -85,12 +86,10 @@ void swrasterize(struct swrasterframe* frame, struct swtri_basic_vertex* triangl
                 if (vec2_mul_inner(n, e2c) < 0.0f) {
                     is_in_tri = false;
                 }
-        
                 i++;
             }
             
-            if (is_in_tri)
-            {
+            if (is_in_tri) {
                 uint32_t r = (uint32_t)triangle->positions.a.abc[0].color[0];
                 uint32_t g = (uint32_t)triangle->positions.a.abc[0].color[1];
                 uint32_t b = (uint32_t)triangle->positions.a.abc[0].color[2];
