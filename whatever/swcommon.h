@@ -67,6 +67,8 @@ SW_DECL_VERTEX2(basic_vertex, vec2, position, swcolor_t, color)
 
 SW_DECL_VERTEX2(raster_vertex, i32vec2, position, swcolor_t, color)
 
+SW_DECL_VERTEX2(vertex, vec4, position, swcolor_t, color);
+
 #define SW_E_OK 0
 #define SW_E_FAIL (-1)
 
@@ -86,6 +88,14 @@ struct swbuffer
     size_t element_length;
     size_t element_stride;
     size_t byte_length;
+};
+
+struct swdepthbuffer
+{
+    struct swbuffer buffer;
+    float depth_near;
+    float depth_far;
+    float resolution;
 };
 
 struct swrasterframe
@@ -117,7 +127,12 @@ swresult_t swbuffer_new(struct swbuffer* buffer, size_t length, size_t stride);
 
 void swbuffer_free(struct swbuffer* buffer);
 
+// resolution is divided over the near - far range
+swresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float far, float resolution);
+
 swresult_t swrasterframe_new(struct swrasterframe* frame, size_t width, size_t height);
+
+void swcleardepth(struct swdepthbuffer* dbuffer);
 
 void swrasterframe_free(struct swrasterframe* frame);
 

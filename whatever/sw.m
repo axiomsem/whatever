@@ -37,6 +37,38 @@ float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal)
     return vec2_len(offset);
 }
 
+
+void ndc_vertex_to_screen(struct swbasic_vertex* result, struct swrasterframe* frame, struct swdepthbuffer* buffer, struct swvertex* v)
+{
+    struct swvertex screen_vertex;
+    memcpy(&screen_vertex, v, sizeof(screen_vertex));
+    
+    for (size_t i = 0; i < 3ull; ++i)
+    {
+        screen_vertex.position[i] += 1.0f;
+    }
+    
+    screen_vertex.position[3] = 1.0f;
+    
+    mat4x4 ndc2scrn = {0};
+    
+    mat4x4_identity(ndc2scrn);
+    
+    ndc2scrn[0][0] = frame->width * 0.5f;
+    ndc2scrn[0][1] = 0.0f;
+    ndc2scrn[0][2] = 0.0f;
+    ndc2scrn[0][3] = 0.0f;
+    
+    ndc2scrn[1][0] = 0.0f;
+    ndc2scrn[1][1] = frame->height * 0.5f;
+    ndc2scrn[1][2] = 0.0f;
+    ndc2scrn[1][3] = 0.0f;
+    
+    ndc2scrn[2][0] = 0.0f;
+    ndc2scrn[2][1] = 0.0f;
+    // need to properly convert depth value here
+}
+
 void swfill(struct swrasterframe* frame)
 {
     vec2 abc[3];
@@ -70,8 +102,7 @@ void swrasterize(struct swrasterframe* frame, struct swtri_basic_vertex* triangl
 {
     for (ssize_t y = 0; y < (ssize_t)frame->height; ++y) {
         for (ssize_t x = 0; x < (ssize_t)frame->width; ++x) {
-            vec2 coords =
-            { (float)x, (float)y };
+            vec2 coords = { (float)x, (float)y };
 
             bool is_in_tri = true;
             

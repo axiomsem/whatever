@@ -50,6 +50,30 @@ swresult_t swfloatframe_init(struct swfloatframe* frame, size_t width, size_t he
     return result;
 }
 
+void swcleardepth(struct swdepthbuffer* dbuffer)
+{
+    float * buffer = dbuffer->buffer.mem;
+    for (size_t i = 0; i < dbuffer->buffer.element_length; ++i) {
+        buffer[i] = dbuffer->depth_far;
+    }
+}
+
+swresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float far, float resolution)
+{
+    size_t length = (size_t)floor((far - near) / resolution);
+    
+    swresult_t result = swbuffer_new(&dbuffer->buffer, length, sizeof(dbuffer->depth_far));
+    if (result == SW_E_OK) {
+        dbuffer->resolution = resolution;
+        dbuffer->depth_far = far;
+        dbuffer->depth_near = near;
+        swcleardepth(dbuffer);
+    }
+    
+    return result;
+}
+
+
 void swfloatframe_free(struct swfloatframe* frame)
 {
     swfree((void**)&frame->buffer);
