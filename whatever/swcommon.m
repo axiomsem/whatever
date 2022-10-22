@@ -16,9 +16,9 @@ static const size_t k_max_size = 1 << 24;
 
 static size_t g_allocated = 0;
 
-SW_IMPL_VERTEX2(basic_vertex, vec3, position, vec4, color)
+SW_IMPL_VERTEX2(basic_vertex, vec2, float, position, vec4, float, color)
 
-SW_IMPL_VERTEX2(raster_vertex, i32vec2, position, i32vec4, color)
+SW_IMPL_VERTEX2(raster_vertex, i32vec2, int32_t, position, i32vec4, int32_t, color)
 
 #ifndef PRINT_TRI_VERTS
 #define PRINT_TRI_VERTS 0

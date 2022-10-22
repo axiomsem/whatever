@@ -52,11 +52,15 @@ struct swtri_##name {\
     } normals;\
 };\
 extern const size_t stride_##name;\
+extern const size_t dim_##name##_##mem1;\
+extern const size_t dim_##name##_##mem2;\
 extern const size_t offset_##name##_##mem1;\
 extern const size_t offset_##name##_##mem2;
 
-#define SW_IMPL_VERTEX2(name, t1, mem1, t2, mem2)\
+#define SW_IMPL_VERTEX2(name, t1, t1base, mem1, t2, t2base, mem2)\
 const size_t stride_##name = sizeof(struct sw##name);\
+const size_t dim_##name##_##mem1 = sizeof(t1) / sizeof(t1base);\
+const size_t dim_##name##_##mem2 = sizeof(t2) / sizeof(t2base);\
 const size_t offset_##name##_##mem1 = offsetof(struct sw##name, mem1);\
 const size_t offset_##name##_##mem2 = offsetof(struct sw##name, mem2);
 

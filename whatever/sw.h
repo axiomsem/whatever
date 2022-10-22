@@ -10,6 +10,8 @@
 
 #include "swcommon.h"
 
+void sw(struct swrasterframe* f);
+
 void swfill(struct swrasterframe* frame);
 
 void swrasterize(struct swrasterframe* frame, struct swtri_basic_vertex* triangle);
