@@ -11,6 +11,7 @@
 #import <Foundation/Foundation.h>
 #include <simd/simd.h>
 #include "linmath.h"
+#include "common.h"
 
 typedef float swreal_t;
 
@@ -73,18 +74,13 @@ SW_DECL_VERTEX2(raster_vertex, i32vec2, position, swcolor_t, color)
 
 SW_DECL_VERTEX2(vertex, vec4, position, swcolor_t, color);
 
-#define SW_E_OK 0
-#define SW_E_FAIL (-1)
-
-typedef int swresult_t;
+#define SW_E_OK W_E_OK
+#define SW_E_FAIL W_E_FAIL
 
 typedef struct swbasic_vertex swvertex_t;
 typedef struct swtri_basic_vertex swtriangle_t;
 
 typedef size_t switer_t;
-
-void* swzalloc(size_t s);
-void swfree(void** p);
 
 struct swbuffer
 {
@@ -119,22 +115,22 @@ struct swfloatframe
     size_t bytesPerPixel;
 };
 
-swresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src);
+wresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src);
 
-swresult_t swfloatframe_init(struct swfloatframe* frame, size_t width, size_t height, size_t bytesPerPixel);
+wresult_t swfloatframe_init(struct swfloatframe* frame, size_t width, size_t height, size_t bytesPerPixel);
 void swfloatframe_free(struct swfloatframe* frame);
 
 void swtri_basic_vertex_from_verts(struct swtri_basic_vertex * v, struct swbasic_vertex* a,
                                     struct swbasic_vertex * b, struct swbasic_vertex * c);
 
-swresult_t swbuffer_new(struct swbuffer* buffer, size_t length, size_t stride);
+wresult_t swbuffer_new(struct swbuffer* buffer, size_t length, size_t stride);
 
 void swbuffer_free(struct swbuffer* buffer);
 
 // resolution is divided over the near - far range
-swresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float far, float resolution);
+wresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float far, float resolution);
 
-swresult_t swrasterframe_new(struct swrasterframe* frame, size_t width, size_t height);
+wresult_t swrasterframe_new(struct swrasterframe* frame, size_t width, size_t height);
 
 void swcleardepth(struct swdepthbuffer* dbuffer);
 

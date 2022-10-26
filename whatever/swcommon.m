@@ -12,10 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const size_t k_max_size = 1 << 24;
-
-static size_t g_allocated = 0;
-
 SW_IMPL_VERTEX2(basic_vertex, vec2, float, position, vec4, float, color)
 
 SW_IMPL_VERTEX2(raster_vertex, i32vec2, int32_t, position, i32vec4, int32_t, color)
@@ -34,12 +30,12 @@ static void vec2_print(const char* name, const vec2 v)
     NSLog(@"%s = { %f, %f }", name, v[0], v[1]);
 }
 
-swresult_t swfloatframe_init(struct swfloatframe* frame, size_t width, size_t height, size_t bytesPerPixel)
+wresult_t swfloatframe_init(struct swfloatframe* frame, size_t width, size_t height, size_t bytesPerPixel)
 {
     swfloatframe_free(frame);
     const size_t byteLength = width * height * bytesPerPixel;
-    frame->buffer = swzalloc(byteLength);
-    swresult_t result = SW_E_FAIL;
+    frame->buffer = zalloc(byteLength);
+    wresult_t result = SW_E_FAIL;
     if (frame->buffer != NULL) {
         result = SW_E_OK;
         frame->width = width;
@@ -58,11 +54,11 @@ void swcleardepth(struct swdepthbuffer* dbuffer)
     }
 }
 
-swresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float far, float resolution)
+wresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float far, float resolution)
 {
     size_t length = (size_t)floor((far - near) / resolution);
     
-    swresult_t result = swbuffer_new(&dbuffer->buffer, length, sizeof(dbuffer->depth_far));
+    wresult_t result = swbuffer_new(&dbuffer->buffer, length, sizeof(dbuffer->depth_far));
     if (result == SW_E_OK) {
         dbuffer->resolution = resolution;
         dbuffer->depth_far = far;
@@ -76,15 +72,15 @@ swresult_t swdepthbuffer_new(struct swdepthbuffer* dbuffer, float near, float fa
 
 void swfloatframe_free(struct swfloatframe* frame)
 {
-    swfree((void**)&frame->buffer);
+    zfree((void**)&frame->buffer);
     memset(frame, 0, sizeof(*frame));
 }
 
-swresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src)
+wresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src)
 {    
     const size_t txComp = 4;
 
-    swresult_t result =
+    wresult_t result =
         swfloatframe_init(dst,
                           src->width,
                           src->height,
@@ -186,43 +182,14 @@ void swtri_basic_vertex_from_verts(struct swtri_basic_vertex * v,
 #endif
 }
 
-// exclusive range test
-#define in_range_ex(min, x, max) ((min < (x)) && ((x) < max))
-
-void* swzalloc(size_t sz)
-{
-    void* p = NULL;
-    if (in_range_ex(0, sz, k_max_size)) {
-        p = malloc(sz);
-        if (p != NULL) {
-            g_allocated += sz;
-            memset(p, 0, sz);
-        }
-        else {
-            printf("oom for %lu with %lu currently used", sz, g_allocated);
-        }
-    }
-    return p;
-}
-
-void swfree(void** p)
-{
-    if (p != NULL) {
-        if (*p != NULL) {
-            free(*p);
-        }
-        *p = NULL;
-    }
-}
-
-swresult_t swbuffer_new(struct swbuffer* out, size_t length, size_t stride)
+wresult_t swbuffer_new(struct swbuffer* out, size_t length, size_t stride)
 {
     swbuffer_free(out);
     
-    swresult_t ret = SW_E_FAIL;
+    wresult_t ret = SW_E_FAIL;
     
     if (out != NULL) {
-        out->mem = swzalloc(length * stride);
+        out->mem = zalloc(length * stride);
         if (out->mem != NULL) {
             out->byte_length = length * stride;
             out->element_length = length;
@@ -238,8 +205,7 @@ void swbuffer_free(struct swbuffer* buffer)
 {
     if (buffer != NULL) {
         if (buffer->mem != NULL) {
-            swfree(buffer->mem);
-            g_allocated -= buffer->byte_length;
+            zfree(buffer->mem);
         }
         memset(buffer, 0, sizeof(*buffer));
     }
@@ -248,12 +214,12 @@ void swbuffer_free(struct swbuffer* buffer)
 void swrasterframe_free(struct swrasterframe* frame)
 {
     void* p = frame->buffer;
-    swfree(&p);
+    zfree(&p);
     
     memset(frame, 0, sizeof(*frame));
 }
 
-swresult_t swrasterframe_new(struct swrasterframe* frame, size_t width, size_t height)
+wresult_t swrasterframe_new(struct swrasterframe* frame, size_t width, size_t height)
 {
     swrasterframe_free(frame);
     
@@ -261,7 +227,7 @@ swresult_t swrasterframe_new(struct swrasterframe* frame, size_t width, size_t h
     frame->height = height;
     frame->byteLength = frame->width * frame->height * sizeof(frame->buffer[0]);
     
-    frame->buffer = swzalloc(frame->byteLength);
+    frame->buffer = zalloc(frame->byteLength);
     
     if (frame->buffer == NULL) {
         NSLog(@"swrasterframe: allocation failure; width:%zu, height:%zu", width, height);

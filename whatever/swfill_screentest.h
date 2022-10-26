@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
-void swfill_screentest();
+#include "swcommon.h"
+
+void swfill_screentest(struct swrasterframe* frame);
 
 #endif /* swfill_screentest_h */

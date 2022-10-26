@@ -1,5 +1,6 @@
 #include "swfill_screentest.h"
 #include "sw.h"
+#include "common.h"
 
 static void swfill_screentest_screenspace(struct swrasterframe* frame)
 {
@@ -64,6 +65,7 @@ struct swfill_ndc_tri_in
     mat4x4 transform;
     vec4 abc[3];
     uint8_t negate_ax[3];
+    uint8_t has_clip;
 };
 
 static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe* frame)
@@ -96,12 +98,26 @@ static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe
         //
         // we copy it back to abc[i].position, since swfill_ndc_vertex_to_screen is expecting a vertex,
         // not a position.
-        vec4 t = {0};
         {
+            vec4 t = {0};
+            
             mat4x4_mul_vec4(t, input->transform, abc[i].position);
-            for (size_t j = 0; j < 3; ++j) {
-                t[j] = input->negate_ax[j] ? (-t[j]) : (t[j]);
+           
+            if (input->has_clip) {
+                for (size_t j = 0; j < 3; ++j) {
+                    t[j] /= t[3];
+                    t[j] = input->negate_ax[j] ? (-t[j]) : (t[j]);
+                }
             }
+            else
+            {
+                for (size_t j = 0; j < 3; ++j) {
+                    t[j] = input->negate_ax[j] ? (-t[j]) : (t[j]);
+                }
+            }
+            
+            
+            
             memcpy(abc[i].position, t, sizeof(t));
         }
         swfill_ndc_vertex_to_screen(&vabc[i], &abc[i], frame);
@@ -135,11 +151,13 @@ static void swfill_screentest_ndc_negatey_rotate(struct swrasterframe* frame, ve
         // transform
         { 0 },
         // abc
-        { { AX, AY, AZ },
-            { BX, BY, BZ },
-            { CX, CY, CZ } },
+        { { AX, AY, AZ, 1.0f },
+            { BX, BY, BZ, 1.0f },
+            { CX, CY, CZ, 1.0f } },
         // negate_ax
-        { false, true, false }
+        { false, true, false },
+        // has_clip
+        false
     };
     
     static float ANGLE_RAD = 0.0f;
@@ -302,6 +320,90 @@ static void swfill_screentest_ndc_negatey_offsety(struct swrasterframe* frame)
     swrasterize(frame, &triangle);
 }
 
+static void swfill_screentest_persp_clip_ndc_negatey(struct swrasterframe* frame, mat4x4 mod2cam)
+{
+    mat4x4 cam2clip = {0};
+    mat4x4_identity(cam2clip);
+    
+    float fw = (float)frame->width;
+    float fh = (float)frame->height;
+    mat4x4_perspective(cam2clip, 45.0f * deg2rad, fw / fh, 0.01f, 100.0f);
+    
+    mat4x4 accum = {0};
+    mat4x4_identity(accum);
+    
+    mat4x4_mul(accum, mod2cam, cam2clip);
+    
+    const float SIZE = 1.0f;
+    const float DEPTH = 0.0f;
+    
+    const float AX = -SIZE;
+    const float AY = -SIZE;
+    const float AZ = DEPTH;
+    
+    const float BX = SIZE;
+    const float BY = -SIZE;
+    const float BZ = DEPTH;
+    
+    const float CX = 0.0f;
+    const float CY = SIZE;
+    const float CZ = DEPTH;
+    
+    struct swfill_ndc_tri_in args =
+    {
+        // transform
+        { 0 },
+        // abc
+        {
+            { AX, AY, AZ, 1.0f },
+            { BX, BY, BZ, 1.0f },
+            { CX, CY, CZ, 1.0f }
+        },
+        // negate_ax
+        {
+            false,
+            true,
+            false
+        },
+        // has_cliip
+        true
+    };
+    
+    memcpy(args.transform, accum, sizeof(accum));
+    
+    swfill_ndc_tri(&args, frame);
+}
+
+enum swtransformmode
+{
+    SWTRANSFORMMODE_IDENTITY = 0,
+    SWTRANSFORMMODE_ROTATE
+};
+
+static void screentest_model_to_camera(mat4x4 mod2cam, vec3 rotate_ax)
+{
+    const enum swtransformmode mode = SWTRANSFORMMODE_ROTATE;
+    
+    static float ANGLE_RAD = 0.0f;
+    static const float ANGLE_STEP = 0.05f;
+    
+    switch (mode) {
+        case SWTRANSFORMMODE_IDENTITY:
+        {
+            mat4x4_identity(mod2cam);
+        }
+            break;
+        case SWTRANSFORMMODE_ROTATE:
+        {
+            mat4x4 tmp;
+            mat4x4_identity(tmp);
+            mat4x4_rotate(mod2cam, tmp, rotate_ax[0], rotate_ax[1], rotate_ax[2], ANGLE_RAD);
+            ANGLE_RAD += ANGLE_STEP;
+        }
+            break;
+    }
+}
+
 void swfill_screentest(struct swrasterframe* frame)
 {
     enum swfillmode_screentest
@@ -317,9 +419,12 @@ void swfill_screentest(struct swrasterframe* frame)
         SWFILLMODE_SCREENTEST_PERSP_CLIP_NDC_NEGATEY
     };
     
-    const enum swfillmode_screentest FILLMODE = SWFILLMODE_SCREENTEST_NDC_NEGATEY_ROTATEZ;
+    const enum swfillmode_screentest FILLMODE = SWFILLMODE_SCREENTEST_PERSP_CLIP_NDC_NEGATEY;
     
-    vec3 rotate_ax = { 0 };
+    vec3 rotate_ax = { 0.0f, 1.0f, 0.0f };
+    
+    mat4x4 mod2cam;
+    screentest_model_to_camera(mod2cam, rotate_ax);
     
     switch (FILLMODE) {
         case SWFILLMODE_SCREENTEST_SCREENSPACE:
@@ -350,6 +455,7 @@ void swfill_screentest(struct swrasterframe* frame)
             swfill_screentest_ndc_negatey_rotate(frame, rotate_ax);
             break;
         case SWFILLMODE_SCREENTEST_PERSP_CLIP_NDC_NEGATEY:
+            swfill_screentest_persp_clip_ndc_negatey(frame, mod2cam);
             break;
         
     }

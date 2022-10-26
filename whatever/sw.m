@@ -25,20 +25,6 @@ static void tri_raster_to_basic(struct swtri_basic_vertex* r, const struct swtri
     }
 }
 
-float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal)
-{
-    // grab the start of the edge, which is still a point,
-    // so we can work with it.
-    vec2 p2e;
-    vec2_sub(p2e, edge_point, point);
-    
-    vec2 offset;
-    vec2_project_v_on_u(offset, p2e, normal);
-    
-    return vec2_len(offset);
-}
-
-
 void swfill_ndc_vertex_to_screen(struct swbasic_vertex* result, const struct swvertex* vndc, const struct swrasterframe* frame)
 {
     struct swvertex screen_vertex;

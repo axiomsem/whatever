@@ -76,7 +76,7 @@
         
         
         
-        swfree((void**)&_dstFrame);
+        zfree((void**)&_dstFrame);
     }
     else {
         NSLog(@"Error in Texture initWithFrame: could not allocate swfloatframe");
