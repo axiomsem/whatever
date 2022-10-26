@@ -11,6 +11,7 @@
 		CE54265B28F9111E003DCCCD /* GameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE54265728F9111E003DCCCD /* GameViewController.m */; };
 		CE54265C28F9111E003DCCCD /* Renderer.m in Sources */ = {isa = PBXBuildFile; fileRef = CE54265828F9111E003DCCCD /* Renderer.m */; };
 		CE54265D28F9111E003DCCCD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CE54265928F9111E003DCCCD /* main.m */; };
+		CE57D2FA2908BCC400AB1DC4 /* swfill_screentest.m in Sources */ = {isa = PBXBuildFile; fileRef = CE57D2F92908BCC400AB1DC4 /* swfill_screentest.m */; };
 		CE78105F28FB71EC00AC3831 /* swcommon.m in Sources */ = {isa = PBXBuildFile; fileRef = CE78105D28FB71EB00AC3831 /* swcommon.m */; };
 		CE78106228FB9C9D00AC3831 /* sw.m in Sources */ = {isa = PBXBuildFile; fileRef = CE78106128FB9C9D00AC3831 /* sw.m */; };
 		CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */ = {isa = PBXBuildFile; fileRef = CE7BC09328FD0DFC002EB35C /* Texture.m */; };
@@ -47,6 +48,8 @@
 		CE54265E28F9118E003DCCCD /* swcommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swcommon.h; sourceTree = "<group>"; };
 		CE54265F28F911DA003DCCCD /* sw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sw.h; sourceTree = "<group>"; };
 		CE54266428F91DA4003DCCCD /* linmath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = linmath.h; sourceTree = "<group>"; };
+		CE57D2F82908BCC400AB1DC4 /* swfill_screentest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swfill_screentest.h; sourceTree = "<group>"; };
+		CE57D2F92908BCC400AB1DC4 /* swfill_screentest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = swfill_screentest.m; sourceTree = "<group>"; };
 		CE78105D28FB71EB00AC3831 /* swcommon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = swcommon.m; sourceTree = "<group>"; };
 		CE78106128FB9C9D00AC3831 /* sw.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = sw.m; sourceTree = "<group>"; };
 		CE7BC09228FD0D74002EB35C /* Texture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Texture.h; sourceTree = "<group>"; };
@@ -134,6 +137,8 @@
 				CE54266428F91DA4003DCCCD /* linmath.h */,
 				CE7BC09228FD0D74002EB35C /* Texture.h */,
 				CE7BC09328FD0DFC002EB35C /* Texture.m */,
+				CE57D2F82908BCC400AB1DC4 /* swfill_screentest.h */,
+				CE57D2F92908BCC400AB1DC4 /* swfill_screentest.m */,
 			);
 			path = whatever;
 			sourceTree = "<group>";
@@ -287,6 +292,7 @@
 				CE54265D28F9111E003DCCCD /* main.m in Sources */,
 				CE54265C28F9111E003DCCCD /* Renderer.m in Sources */,
 				CE78105F28FB71EC00AC3831 /* swcommon.m in Sources */,
+				CE57D2FA2908BCC400AB1DC4 /* swfill_screentest.m in Sources */,
 				CE54265A28F9111E003DCCCD /* AppDelegate.m in Sources */,
 				CE78106228FB9C9D00AC3831 /* sw.m in Sources */,
 				CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */,
