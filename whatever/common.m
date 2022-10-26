@@ -90,21 +90,32 @@ void stack_del(struct stack* s)
     }
 }
 
-void stack_push(struct stack* s, void* elem)
+wresult_t stack_push(struct stack* s, void* elem)
 {
+    wresult_t ok = W_E_OK;
+    
     if (s->top >= s->length) {
+        ok = W_E_FAIL;
         s->length <<= 1;
         void* r = realloc(s->buffer, s->length * s->elem_size);
-        if (r == NULL) {
+        if (r != NULL) {
+            s->buffer = r;
+            ok = W_E_OK;
+        }
+        else {
             OOM();
         }
-        s->buffer = r;
+        
     }
-
-    uint8_t* p1 = s->buffer;
-    uint8_t* p2 = p1 + s->top * s->elem_size;
-    memcpy(p2, elem, s->elem_size);
-    s->top++;
+    
+    if (ok == W_E_OK) {
+        uint8_t* p1 = s->buffer;
+        uint8_t* p2 = p1 + s->top * s->elem_size;
+        memcpy(p2, elem, s->elem_size);
+        s->top++;
+    }
+    
+    return ok;
 }
 
 void* stack_peek(struct stack* s)
@@ -128,7 +139,7 @@ wresult_t matstack_new(struct matstack* ms)
     wresult_t ok = stack_new(&ms->s, sizeof(struct matstackelem));
     if (ok == W_E_OK) {
         mat4x4_identity(ms->top.value);
-        stack_push(&ms->s, &ms->top);
+        ok = stack_push(&ms->s, &ms->top);
     }
     return ok;
 }

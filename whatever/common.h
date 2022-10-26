@@ -39,7 +39,7 @@ struct stack
 
 wresult_t stack_new(struct stack* s, size_t elem_size);
 void stack_del(struct stack* s);
-void stack_push(struct stack* s, void * elem);
+wresult_t stack_push(struct stack* s, void * elem);
 void* stack_peek(struct stack* s);
 void stack_pop(struct stack* s);
 
