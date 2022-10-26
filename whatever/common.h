@@ -9,7 +9,6 @@
 #define common_h
 
 #include "linmath.h"
-#include <stack>
 
 #define WPI 3.1415926535f
 
@@ -23,6 +22,10 @@ typedef int wresult_t;
 void* zalloc(size_t s);
 
 void zfree(void** p);
+
+void oom_impl(const char* file, const char* func, int line);
+
+#define OOM() oom_impl(__FILE__, __func__, __LINE__)
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal);
 
@@ -40,22 +43,17 @@ void stack_push(struct stack* s, void * elem);
 void* stack_peek(struct stack* s);
 void stack_pop(struct stack* s);
 
-struct matstack_rotate
-{
-    vec3 axes;
-    float degrad;
+struct matstackelem {
+    mat4x4 value;
 };
 
-struct matstack
-{
-    struct wrapper
-    {
-        mat4x4 value;
-    };
-    
-    std::stack<wrapp> data;
-    
-    void push(matstack_rotate rotate);
+struct matstack {
+    struct stack s;
+    struct matstackelem top;
 };
+
+wresult_t matstack_new(struct matstack* ms);
+void matstack_rotate(struct matstack* ms, float angle, vec3 axes);
+void matstack_del(struct matstack* ms);
 
 #endif /* common_h */

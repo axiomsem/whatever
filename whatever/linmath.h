@@ -254,12 +254,19 @@ LINMATH_H_FUNC void mat4x4_scale_aniso(mat4x4 M, mat4x4 const a, float x, float 
 }
 LINMATH_H_FUNC void mat4x4_mul(mat4x4 M, mat4x4 const a, mat4x4 const b)
 {
+    // NOTE:
+    // this is definitely standard Av = v' style transform, where column vectors are used.
+    // the implication being that AB = |b1|b2|b3|b4 would be done the same way, as if B were
+    // 4 separate column vectors.
     mat4x4 temp;
     int k, r, c;
-    for(c=0; c<4; ++c) for(r=0; r<4; ++r) {
-        temp[c][r] = 0.f;
-        for(k=0; k<4; ++k)
-            temp[c][r] += a[k][r] * b[c][k];
+    for(c=0; c<4; ++c) {
+        for(r=0; r<4; ++r) {
+            temp[c][r] = 0.f;
+            for(k=0; k<4; ++k) {
+                temp[c][r] += a[k][r] * b[c][k];
+            }
+        }
     }
     mat4x4_dup(M, temp);
 }

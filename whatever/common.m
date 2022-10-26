@@ -42,6 +42,12 @@ void zfree(void** p)
     }
 }
 
+void oom_impl(const char* file, const char* func, int line)
+{
+    printf("out of memory: %s:%s:%i\n", file, func, line);
+    exit(1);
+}
+
 const float deg2rad = WPI / 180.0f;
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal)
@@ -66,11 +72,14 @@ wresult_t stack_new(struct stack* s, size_t elem_size)
     s->elem_size = elem_size;
     s->length = initial_size;
     
-    if (s->buffer != NULL) {
-        return W_E_OK;
+    wresult_t ok = W_E_OK;
+    
+    if (s->buffer == NULL) {
+        OOM();
+        ok = W_E_FAIL;
     }
     
-    return W_E_FAIL;
+    return ok;
 }
 
 void stack_del(struct stack* s)
@@ -83,12 +92,19 @@ void stack_del(struct stack* s)
 
 void stack_push(struct stack* s, void* elem)
 {
-    if (s->top < s->length) {
-        uint8_t* p1 = s->buffer;
-        uint8_t* p2 = p1 + s->top * s->elem_size;
-        memcpy(p2, elem, s->elem_size);
-        s->top++;
+    if (s->top >= s->length) {
+        s->length <<= 1;
+        void* r = realloc(s->buffer, s->length * s->elem_size);
+        if (r == NULL) {
+            OOM();
+        }
+        s->buffer = r;
     }
+
+    uint8_t* p1 = s->buffer;
+    uint8_t* p2 = p1 + s->top * s->elem_size;
+    memcpy(p2, elem, s->elem_size);
+    s->top++;
 }
 
 void* stack_peek(struct stack* s)
@@ -101,10 +117,35 @@ void* stack_peek(struct stack* s)
 
 void stack_pop(struct stack* s)
 {
-    if (s != NULL) {
-        if (s->top != NULL) {
-            
-        }
+    if (s->top > 0) {
+        s->top--;
     }
 }
+
+wresult_t matstack_new(struct matstack* ms)
+{
+    matstack_del(ms);
+    wresult_t ok = stack_new(&ms->s, sizeof(struct matstackelem));
+    if (ok == W_E_OK) {
+        mat4x4_identity(ms->top.value);
+        stack_push(&ms->s, &ms->top);
+    }
+    return ok;
+}
+
+void matstack_rotate(struct matstack* ms, float angle, vec3 axes)
+{
+    mat4x4 tmp = {0};
+    mat4x4_identity(tmp);
+    struct matstackelem n = {0};
+    mat4x4_rotate(n.value, tmp, axes[0], axes[1], axes[2], angle);
+    mat4x4_mul(tmp, ms->top.value, n.value);
+}
+
+void matstack_del(struct matstack* ms)
+{
+    stack_del(&ms->s);
+    memset(ms, 0, sizeof(*ms));
+}
+
 
