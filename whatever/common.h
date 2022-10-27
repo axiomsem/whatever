@@ -29,6 +29,13 @@ void oom_impl(const char* file, const char* func, int line);
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal);
 
+struct mesh_template
+{
+    vec3 triangle[3];
+};
+
+extern const struct mesh_template g_mesh_template;
+
 struct stack
 {
     void* buffer;
@@ -53,7 +60,14 @@ struct matstack {
 };
 
 wresult_t matstack_new(struct matstack* ms);
+
+void matstack_mul(struct matstack* ms, mat4x4 m);
+void matstack_clip_default(struct matstack* ms, float width, float height);
 void matstack_rotate(struct matstack* ms, float angle, vec3 axes);
+void matstack_translate(struct matstack* ms, vec3 v);
+void matstack_scale(struct matstack* ms, vec3 v);
+
+
 void matstack_del(struct matstack* ms);
 
 #endif /* common_h */

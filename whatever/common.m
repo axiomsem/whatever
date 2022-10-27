@@ -16,6 +16,25 @@ static const size_t k_max_size = 1 << 24;
 
 static size_t g_allocated = 0;
 
+const struct mesh_template g_mesh_template =
+{
+    // triangle
+    {
+        // A
+        {
+            -1.0f, -1.0f, 0.0f
+        },
+        // B
+        {
+            1.0f, -1.0f, 0.0f
+        },
+        // C
+        {
+            0.0f, 1.0f, 0.0f
+        }
+    }
+};
+
 void* zalloc(size_t sz)
 {
     void* p = NULL;
@@ -85,7 +104,7 @@ wresult_t stack_new(struct stack* s, size_t elem_size)
 void stack_del(struct stack* s)
 {
     if (s != NULL) {
-        zfree(s->buffer);
+        zfree(&s->buffer);
         memset(s, 0, sizeof(*s));
     }
 }
@@ -133,6 +152,14 @@ void stack_pop(struct stack* s)
     }
 }
 
+void matstack_mul(struct matstack* ms, mat4x4 m)
+{
+    mat4x4 tmp2 = {0};
+    mat4x4_mul(tmp2, ms->top.value, m);
+    memcpy(ms->top.value, tmp2, sizeof(tmp2));
+    stack_push(&ms->s, &ms->top);
+}
+
 wresult_t matstack_new(struct matstack* ms)
 {
     matstack_del(ms);
@@ -148,9 +175,38 @@ void matstack_rotate(struct matstack* ms, float angle, vec3 axes)
 {
     mat4x4 tmp = {0};
     mat4x4_identity(tmp);
-    struct matstackelem n = {0};
-    mat4x4_rotate(n.value, tmp, axes[0], axes[1], axes[2], angle);
-    mat4x4_mul(tmp, ms->top.value, n.value);
+    mat4x4 rot = {0};
+    mat4x4_identity(rot);
+    mat4x4_rotate(rot, tmp, axes[0], axes[1], axes[2], angle);
+    matstack_mul(ms, rot);
+}
+
+void matstack_clip_default(struct matstack* ms, float width, float height)
+{
+    mat4x4 tmp;
+    mat4x4_identity(tmp);
+    mat4x4_perspective(tmp, 45.0f * deg2rad, width / height, 0.01f, 100.0f);
+    matstack_mul(ms, tmp);
+}
+
+void matstack_translate(struct matstack* ms, vec3 v)
+{
+    mat4x4 tmp = {0};
+    mat4x4_identity(tmp);
+    mat4x4_translate(tmp, v[0], v[1], v[2]);
+    matstack_mul(ms, tmp);
+}
+
+void matstack_scale(struct matstack* ms, vec3 v)
+{
+    mat4x4 tmp = {0};
+    mat4x4_identity(tmp);
+    
+    tmp[0][0] = v[0];
+    tmp[1][1] = v[1];
+    tmp[2][2] = v[2];
+    
+    matstack_mul(ms, tmp);
 }
 
 void matstack_del(struct matstack* ms)
