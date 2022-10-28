@@ -12,9 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-SW_IMPL_VERTEX2(basic_vertex, vec2, float, position, vec4, float, color)
-
-SW_IMPL_VERTEX2(raster_vertex, i32vec2, int32_t, position, i32vec4, int32_t, color)
+SW_IMPL_VERTEX2(attrib, vec4, float, position, swcolor_t, uint8_t, color)
+SW_IMPL_VERTEX2(raster, vec2, float, position, swcolor_t, uint8_t, color)
 
 #ifndef PRINT_TRI_VERTS
 #define PRINT_TRI_VERTS 0
@@ -107,10 +106,10 @@ wresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src)
     return result;
 }
 
-void swtri_basic_vertex_from_verts(struct swtri_basic_vertex * v,
-                                   struct swbasic_vertex* a,
-                                   struct swbasic_vertex * b,
-                                   struct swbasic_vertex * c)
+void swraster_tri_from_vertices(struct swraster_tri * v,
+                                   struct swraster_vertex* a,
+                                   struct swraster_vertex * b,
+                                   struct swraster_vertex * c)
 {
     memset(v, 0, sizeof(*v));
     

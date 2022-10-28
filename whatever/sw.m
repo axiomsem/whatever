@@ -14,20 +14,9 @@ static void i32vec2_to_vec2(vec2 r, const i32vec2 src)
     r[1] = (float)src[1];
 }
 
-static void tri_raster_to_basic(struct swtri_basic_vertex* r, const struct swtri_raster_vertex* src)
+void swfill_ndc_vertex_to_screen(struct swraster_vertex* result, const struct swattrib_vertex* vndc, const struct swrasterframe* frame)
 {
-    for (size_t i = 0; i < 3; ++i) {
-        i32vec2_to_vec2(r->positions.a.abc[i].position, src->positions.a.abc[i].position);
-        i32vec2_to_vec2(r->edges.a.abc[i].position, src->edges.a.abc[i].position);
-        i32vec2_to_vec2(r->normals.a.abc[i].position, src->normals.a.abc[i].position);
-        
-        memcpy(r->positions.a.abc[i].color, src->positions.a.abc[i].color, sizeof(src->positions.a.abc[i].color));
-    }
-}
-
-void swfill_ndc_vertex_to_screen(struct swbasic_vertex* result, const struct swvertex* vndc, const struct swrasterframe* frame)
-{
-    struct swvertex screen_vertex;
+    struct swattrib_vertex screen_vertex;
     memcpy(&screen_vertex, vndc, sizeof(screen_vertex));
     
     // conversion for any x from [-1, 1] to some [0,y] is:
@@ -67,7 +56,7 @@ void swfill_ndc_vertex_to_screen(struct swbasic_vertex* result, const struct swv
     mat4x4_mul_vec4(result4, ndc2scrn, screen_vertex.position);
     
     memcpy(result->color, screen_vertex.color, sizeof(screen_vertex.color));
-    for (size_t i = 0; i < dim_basic_vertex_position; ++i) {
+    for (size_t i = 0; i < dim_raster_position; ++i) {
         result->position[i] = result4[i];
     }
 }
@@ -77,7 +66,9 @@ void swfill(struct swrasterframe* frame)
     swfill_screentest(frame);
 }
 
-void swrasterize(struct swrasterframe* frame, struct swtri_basic_vertex* triangle)
+
+ 
+void swrasterize(struct swrasterframe* frame, struct swraster_tri* triangle)
 {
     for (ssize_t y = 0; y < (ssize_t)frame->height; ++y) {
         for (ssize_t x = 0; x < (ssize_t)frame->width; ++x) {

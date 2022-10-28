@@ -18,15 +18,15 @@ static void swfill_screentest_screenspace(struct swrasterframe* frame)
       255, 0, 0, 255
     };
     
-    struct swbasic_vertex vabc[3];
+    struct swraster_vertex vabc[3];
     
     for (size_t i = 0; i < 3; i++) {
         memcpy(vabc[i].position, abc[i], sizeof(abc[0]));
         memcpy(vabc[i].color, color, sizeof(color));
     }
     
-    struct swtri_basic_vertex triangle;
-    swtri_basic_vertex_from_verts(&triangle, &vabc[0], &vabc[1], &vabc[2]);
+    struct swraster_tri triangle;
+    swraster_tri_from_vertices(&triangle, &vabc[0], &vabc[1], &vabc[2]);
     
     swrasterize(frame, &triangle);
 }
@@ -47,15 +47,15 @@ static void swfill_screentest_screenspace_flipy(struct swrasterframe* frame)
       255, 0, 0, 255
     };
     
-    struct swbasic_vertex vabc[3];
+    struct swraster_vertex vabc[3];
     
     for (size_t i = 0; i < 3; i++) {
         memcpy(vabc[i].position, abc[i], sizeof(abc[0]));
         memcpy(vabc[i].color, color, sizeof(color));
     }
     
-    struct swtri_basic_vertex triangle;
-    swtri_basic_vertex_from_verts(&triangle, &vabc[0], &vabc[1], &vabc[2]);
+    struct swraster_tri triangle;
+    swraster_tri_from_vertices(&triangle, &vabc[0], &vabc[1], &vabc[2]);
     
     swrasterize(frame, &triangle);
 }
@@ -70,7 +70,7 @@ struct swfill_ndc_tri_in
 
 static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe* frame)
 {
-    struct swvertex abc[3] =
+    struct swattrib_vertex abc[3] =
     {
         // struct swvertex
         {
@@ -89,7 +89,7 @@ static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe
         }
     };
     
-    struct swbasic_vertex vabc[3];
+    struct swraster_vertex vabc[3];
     
     for (size_t i = 0; i < 3; i++) {
         // need to make a copy, since here we're transforming abc[i].position to some other
@@ -123,8 +123,8 @@ static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe
         swfill_ndc_vertex_to_screen(&vabc[i], &abc[i], frame);
     }
     
-    struct swtri_basic_vertex triangle;
-    swtri_basic_vertex_from_verts(&triangle, &vabc[0], &vabc[1], &vabc[2]);
+    struct swraster_tri triangle;
+    swraster_tri_from_vertices(&triangle, &vabc[0], &vabc[1], &vabc[2]);
     
     swrasterize(frame, &triangle);
 }
@@ -190,7 +190,7 @@ static void swfill_screentest_ndc(struct swrasterframe* frame)
     const float CY = SIZE;
     const float CZ = DEPTH;
     
-    struct swvertex abc[3] =
+    struct swattrib_vertex abc[3] =
     {
         // struct swvertex
         {
@@ -209,14 +209,14 @@ static void swfill_screentest_ndc(struct swrasterframe* frame)
         }
     };
     
-    struct swbasic_vertex vabc[3] = {0};
+    struct swraster_vertex vabc[3] = {0};
     
     for (size_t i = 0; i < 3; i++) {
         swfill_ndc_vertex_to_screen(&vabc[i], &abc[i], frame);
     }
     
-    struct swtri_basic_vertex triangle;
-    swtri_basic_vertex_from_verts(&triangle, &vabc[0], &vabc[1], &vabc[2]);
+    struct swraster_tri triangle;
+    swraster_tri_from_vertices(&triangle, &vabc[0], &vabc[1], &vabc[2]);
     
     swrasterize(frame, &triangle);
 }
@@ -238,7 +238,7 @@ static void swfill_screentest_ndc_negatey(struct swrasterframe* frame)
     const float CY = SIZE;
     const float CZ = DEPTH;
     
-    struct swvertex abc[3] =
+    struct swattrib_vertex abc[3] =
     {
         // struct swvertex
         {
@@ -257,15 +257,15 @@ static void swfill_screentest_ndc_negatey(struct swrasterframe* frame)
         }
     };
     
-    struct swbasic_vertex vabc[3];
+    struct swraster_vertex vabc[3];
     
     for (size_t i = 0; i < 3; i++) {
         abc[i].position[1] = -abc[i].position[1];
         swfill_ndc_vertex_to_screen(&vabc[i], &abc[i], frame);
     }
     
-    struct swtri_basic_vertex triangle;
-    swtri_basic_vertex_from_verts(&triangle, &vabc[0], &vabc[1], &vabc[2]);
+    struct swraster_tri triangle;
+    swraster_tri_from_vertices(&triangle, &vabc[0], &vabc[1], &vabc[2]);
     
     swrasterize(frame, &triangle);
 }
@@ -288,7 +288,7 @@ static void swfill_screentest_ndc_negatey_offsety(struct swrasterframe* frame)
     const float CY = YOFS + SIZE;
     const float CZ = DEPTH;
     
-    struct swvertex abc[3] =
+    struct swattrib_vertex abc[3] =
     {
         // struct swvertex
         {
@@ -307,15 +307,15 @@ static void swfill_screentest_ndc_negatey_offsety(struct swrasterframe* frame)
         }
     };
     
-    struct swbasic_vertex vabc[3];
+    struct swraster_vertex vabc[3];
     
     for (size_t i = 0; i < 3; i++) {
         abc[i].position[1] = -abc[i].position[1];
         swfill_ndc_vertex_to_screen(&vabc[i], &abc[i], frame);
     }
     
-    struct swtri_basic_vertex triangle;
-    swtri_basic_vertex_from_verts(&triangle, &vabc[0], &vabc[1], &vabc[2]);
+    struct swraster_tri triangle;
+    swraster_tri_from_vertices(&triangle, &vabc[0], &vabc[1], &vabc[2]);
     
     swrasterize(frame, &triangle);
 }
@@ -327,7 +327,9 @@ static void swfill_screentest_persp_clip_ndc_negatey(struct swrasterframe* frame
     struct swfill_ndc_tri_in args =
     {
         // transform
-        { 0 },
+        {
+            0
+        },
         // abc
         {
             { tmpl->triangle[0][0], tmpl->triangle[0][1], tmpl->triangle[0][2], 1.0f },
@@ -372,7 +374,7 @@ static void screentest_model_to_camera(mat4x4 mod2cam, vec3 rotate_ax, float wid
         {
             struct matstack ms = {0};
             matstack_new(&ms);
-            vec3 t = { 0.0f, 0.0f, -10.0f };
+            vec3 t = { 0.0f, 0.0f, -1.0f };
             vec3 s = { 0.25f, 0.25f, 0.25f };
             matstack_clip_default(&ms, width, height);
             matstack_translate(&ms, t);
@@ -407,7 +409,7 @@ void swfill_screentest(struct swrasterframe* frame)
     
     vec3 rotate_ax = { 0.0f, 1.0f, 0.0f };
     
-    mat4x4 mod2cam;
+    mat4x4 mod2cam = { 0 };
     screentest_model_to_camera(mod2cam, rotate_ax, frame->width, frame->height);
     
     switch (FILLMODE) {
