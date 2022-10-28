@@ -215,4 +215,43 @@ void matstack_del(struct matstack* ms)
     memset(ms, 0, sizeof(*ms));
 }
 
+// input: p, a, b, c - abc are vertices; p is point within triangle
+// output: uvw -> au + vb + cw = p -> u + v + w = 1
+//
+// vec v0 = b - a, v1 = c - a, v2 = p - a
+// d00 = dot v0 v0
+// d01 = dot v0 v1
+// d11 = dot v1 v1
+// d20 = dot v2 v0
+// d21 = dot v2 v1
+//
+// denom = d00 * d11 - d01 * d01
+// v = (d11 * d20 - d01 * d21) / denom
+// w = (d00 * d21 - d01 * d20) / denom
+// output: uvw -> au + vb + cw = p -> u + v + w = 1
+void tri_interp_screen(struct tri_interp_screen_in* input, vec4 output_color)
+{
+    vec2 v0, v1, v2;
+    vec2_sub(v0, input->abc_pos[1], input->abc_pos[0]);
+    vec2_sub(v1, input->abc_pos[2], input->abc_pos[0]);
+    vec2_sub(v2, input->p, input->abc_pos[0]);
+    
+    float d00 = vec2_dot(v0, v0);
+    float d01 = vec2_dot(v0, v1);
+    float d11 = vec2_dot(v1, v1);
+    float d20 = vec2_dot(v2, v0);
+    float d21 = vec2_dot(v2, v1);
+    
+    float denom = 1.0f / (d00 * d11 - d01 * d01);
+    
+    float v = (d11 * d20 - d01 * d21) * denom;
+    float w = (d00 * d21 - d01 * d20) * denom;
+    float u = 1.0f - v - w;
+    
+    output_color[0] = input->abc_col[0][0] * u + input->abc_col[1][0] * v + input->abc_col[2][0] * w;
+    output_color[1] = input->abc_col[0][1] * u + input->abc_col[1][1] * v + input->abc_col[2][1] * w;
+    output_color[2] = input->abc_col[0][2] * u + input->abc_col[1][2] * v + input->abc_col[2][2] * w;
+    output_color[3] = 1.0f;
+}
+
 

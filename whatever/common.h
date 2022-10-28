@@ -25,6 +25,8 @@ void zfree(void** p);
 
 void oom_impl(const char* file, const char* func, int line);
 
+#define vec2_dot vec2_mul_inner
+
 #define OOM() oom_impl(__FILE__, __func__, __LINE__)
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal);
@@ -69,5 +71,18 @@ void matstack_scale(struct matstack* ms, vec3 v);
 
 
 void matstack_del(struct matstack* ms);
+
+// input: p, a, b, c - abc are vertices; p is point within triangle
+// output: uvw -> au + vb + cw = p -> u + v + w = 1
+
+struct tri_interp_screen_in
+{
+    vec4 abc_col[3];
+    vec2 abc_pos[3];
+    vec2 p;
+    float out_color;
+};
+
+void tri_interp_screen(struct tri_interp_screen_in* input, vec4 output_color);
 
 #endif /* common_h */
