@@ -70,7 +70,7 @@ typedef uint8_t swcolor_t[4];
 // vertex 3 float color 4 float
 SW_DECL_VERTEX2(raster, vec2, position, swcolor_t, color)
 
-SW_DECL_VERTEX2(attrib, vec4, position, swcolor_t, color);
+SW_DECL_VERTEX2(attrib, vec4, position, vec4, color);
 
 #define SW_E_OK W_E_OK
 #define SW_E_FAIL W_E_FAIL
