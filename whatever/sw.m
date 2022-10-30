@@ -94,15 +94,14 @@ void swrasterize(struct swrasterframe* frame, struct swraster_tri* triangle)
                 }
                 i++;
             }
-            
-            const bool do_blending = true;
+        
             
             if (is_in_tri) {
-                // for do_blending, we want to perform a blending
+                // for per-vertex color blending, we want to perform a blending
                 // based on the pixel's distance in the triangle
                 // from each vertex. We then can perform more computations
                 // from there.
-                if (do_blending) {
+                if (SWPIPELINE.per_vertex_color_blending_enabled) {
                     struct tri_interp_screen_in blend_params = {0};
                     
                     memcpy(blend_params.abc_col[0], triangle->positions.a.abc[0].color, sizeof(vec4));

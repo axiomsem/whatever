@@ -60,15 +60,6 @@ static void swfill_screentest_screenspace_flipy(struct swrasterframe* frame)
     swrasterize(frame, &triangle);
 }
 
-struct vs_color
-{
-    mat4x4 transform;
-    vec4 abc[3];
-    vec4 color[3];
-    uint8_t negate_ax[3];
-    uint8_t has_clip;
-};
-
 static void swfill_ndc_tri(struct vs_color* input, struct swrasterframe* frame)
 {
     struct swattrib_vertex abc[3] =
@@ -104,16 +95,16 @@ static void swfill_ndc_tri(struct vs_color* input, struct swrasterframe* frame)
             
             mat4x4_mul_vec4(t, input->transform, abc[i].position);
            
-            if (input->has_clip) {
+            if (SWPIPELINE.clip_to_ndc_enabled) {
                 for (size_t j = 0; j < 3; ++j) {
                     t[j] /= t[3];
-                    t[j] = input->negate_ax[j] ? (-t[j]) : (t[j]);
+                    t[j] = SWPIPELINE.negate_axes[j] ? (-t[j]) : (t[j]);
                 }
             }
             else
             {
                 for (size_t j = 0; j < 3; ++j) {
-                    t[j] = input->negate_ax[j] ? (-t[j]) : (t[j]);
+                    t[j] = SWPIPELINE.negate_axes[j] ? (-t[j]) : (t[j]);
                 }
             }
             
@@ -152,11 +143,7 @@ static void swfill_screentest_ndc_negatey_rotate(struct swrasterframe* frame, ve
         // abc
         { { AX, AY, AZ, 1.0f },
             { BX, BY, BZ, 1.0f },
-            { CX, CY, CZ, 1.0f } },
-        // negate_ax
-        { false, true, false },
-        // has_clip
-        false
+            { CX, CY, CZ, 1.0f } }
     };
     
     static float ANGLE_RAD = 0.0f;
@@ -340,14 +327,7 @@ static void swfill_screentest_persp_clip_ndc_negatey(struct swrasterframe* frame
             COLORF_R,
             COLORF_G,
             COLORF_B
-        },
-        .negate_ax =
-        {
-            false,
-            true,
-            false
-        },
-        .has_clip = true
+        }
     };
     
     memcpy(args.transform, mod2cam, sizeof(mat4x4));

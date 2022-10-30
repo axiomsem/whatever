@@ -10,6 +10,7 @@
 
 #include "swcommon.h"
 
+
 void sw(struct swrasterframe* f);
 
 void swfill(struct swrasterframe* frame);
