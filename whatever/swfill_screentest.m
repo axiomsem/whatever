@@ -2,6 +2,7 @@
 #include "sw.h"
 #include "common.h"
 
+#if SCREENTEST
 static void swfill_screentest_screenspace(struct swrasterframe* frame)
 {
     vec2 abc[3];
@@ -83,6 +84,9 @@ static void swfill_ndc_tri(struct vs_color* input, struct swrasterframe* frame)
     
     struct swraster_vertex vabc[3] = {0};
     
+    uint8_t negate_axes[3] = { false, true, false };
+    
+    
     for (size_t i = 0; i < 3; i++) {
         // need to make a copy, since here we're transforming abc[i].position to some other
         // vec (t) and then negating the axis - we do this last since that's the NDC' space
@@ -95,16 +99,16 @@ static void swfill_ndc_tri(struct vs_color* input, struct swrasterframe* frame)
             
             mat4x4_mul_vec4(t, input->transform, abc[i].position);
            
-            if (SWPIPELINE.clip_to_ndc_enabled) {
+            if (true) {
                 for (size_t j = 0; j < 3; ++j) {
                     t[j] /= t[3];
-                    t[j] = SWPIPELINE.negate_axes[j] ? (-t[j]) : (t[j]);
+                    t[j] = negate_axes[j] ? (-t[j]) : (t[j]);
                 }
             }
             else
             {
                 for (size_t j = 0; j < 3; ++j) {
-                    t[j] = SWPIPELINE.negate_axes[j] ? (-t[j]) : (t[j]);
+                    t[j] = negate_axes[j] ? (-t[j]) : (t[j]);
                 }
             }
             
@@ -360,7 +364,7 @@ static void screentest_model_to_camera(mat4x4 mod2cam, vec3 rotate_ax, float wid
             matstack_new(&ms);
             vec3 t = { 0.0f, 0.0f, -1.0f };
             vec3 s = { 0.25f, 0.25f, 0.25f };
-            matstack_clip_default(&ms, width, height);
+            matstack_perspective(&ms, 45.0f, width, height, 0.01f, 100.0f);
             matstack_translate(&ms, t);
             matstack_rotate(&ms, ANGLE_RAD, rotate_ax);
             matstack_scale(&ms, s);
@@ -430,3 +434,4 @@ void swfill_screentest(struct swrasterframe* frame)
         
     }
 }
+#endif

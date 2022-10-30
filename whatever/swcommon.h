@@ -113,23 +113,12 @@ struct swfloatframe
     size_t bytesPerPixel;
 };
 
-struct swpipeline
-{
-    uint8_t negate_axes[3];
-    
-    uint8_t clip_to_ndc_enabled;
-    uint8_t perspective_correct_sampling_enabled;
-    uint8_t per_vertex_color_blending_enabled;
-};
-
 struct vs_color
 {
     mat4x4 transform;
     vec4 abc[3];
     vec4 color[3];
 };
-
-extern struct swpipeline SWPIPELINE;
 
 wresult_t swrastertofloat(struct swfloatframe* dst, struct swrasterframe* src);
 

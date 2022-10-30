@@ -9,6 +9,7 @@
 #define common_h
 
 #include "linmath.h"
+#include <stdbool.h>
 
 #define WPI 3.1415926535f
 
@@ -24,14 +25,21 @@ void* zalloc(size_t s);
 void zfree(void** p);
 
 void oom_impl(const char* file, const char* func, int line);
+bool chkres_impl(wresult_t result, const char* expr, const char* file, const char* func, int line);
 
 #define vec2_dot vec2_mul_inner
 
 #define OOM() oom_impl(__FILE__, __func__, __LINE__)
 
+#define CHKRES(expr) chkres_impl(expr, #expr, __FILE__, __func__, __LINE__)
+
 #define COLORF_R { 1.0f, 0.0f, 0.0f, 1.0f }
 #define COLORF_G { 0.0f, 1.0f, 0.0f, 1.0f } 
 #define COLORF_B { 0.0f, 0.0f, 1.0f, 1.0f }
+
+#ifndef SCREENTEST
+#define SCREENTEST 1
+#endif
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal);
 
@@ -68,7 +76,7 @@ struct matstack {
 wresult_t matstack_new(struct matstack* ms);
 
 void matstack_mul(struct matstack* ms, mat4x4 m);
-void matstack_clip_default(struct matstack* ms, float width, float height);
+void matstack_perspective(struct matstack* ms, float fovydeg, float width, float height, float znear, float zfar);
 void matstack_rotate(struct matstack* ms, float angle, vec3 axes);
 void matstack_translate(struct matstack* ms, vec3 v);
 void matstack_scale(struct matstack* ms, vec3 v);

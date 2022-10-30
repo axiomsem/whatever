@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // exclusive range test
 #define in_range_ex(min, x, max) ((min < (x)) && ((x) < max))
@@ -65,6 +66,18 @@ void oom_impl(const char* file, const char* func, int line)
 {
     printf("out of memory: %s:%s:%i\n", file, func, line);
     exit(1);
+}
+
+bool chkres_impl(wresult_t result, const char* expr, const char* file, const char* func, int line)
+{
+    bool ret = true;
+    
+    if (result != W_E_OK) {
+        printf("WARNING: error reported for %s. Value given: %i, at %s:%s:%i\n", expr, result, file, func, line);
+        ret = false;
+    }
+    
+    return ret;
 }
 
 const float deg2rad = WPI / 180.0f;
@@ -181,11 +194,11 @@ void matstack_rotate(struct matstack* ms, float angle, vec3 axes)
     matstack_mul(ms, rot);
 }
 
-void matstack_clip_default(struct matstack* ms, float width, float height)
+void matstack_perspective(struct matstack* ms, float fovydeg, float width, float height, float znear, float zfar)
 {
     mat4x4 tmp;
     mat4x4_identity(tmp);
-    mat4x4_perspective(tmp, 45.0f * deg2rad, width / height, 0.01f, 100.0f);
+    mat4x4_perspective(tmp, fovydeg * deg2rad, width / height, znear, zfar);
     matstack_mul(ms, tmp);
 }
 

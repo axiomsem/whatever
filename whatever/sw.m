@@ -8,6 +8,125 @@
 #include "sw.h"
 #include "swfill_screentest.h"
 
+struct vec2_elem
+{
+    vec2 v;
+};
+
+struct vec4_elem
+{
+    vec4 v;
+};
+
+#define SWVERTEX_COUNT_INIT 3
+
+struct swpipeline
+{
+    struct vec4_elem* attribute_positions;
+    struct vec4_elem* attribute_colors;
+    
+    struct vec2_elem* raster_positions;
+    struct vec2_elem* raster_edges;
+    struct vec2_elem* raster_normals;
+    struct vec4_elem* raster_colors;
+    
+    struct matstack camera_to_clip;
+    
+    struct matstack model_to_camera;
+    
+    struct swfloatframe floatframe;
+    
+    struct swrasterframe rasterframe;
+    
+    enum swpipeline_enum error;
+    
+    uint8_t negate_axes[3];
+    
+    uint8_t clip_to_ndc_enabled;
+    uint8_t perspective_correct_sampling_enabled;
+    uint8_t per_vertex_color_blending_enabled;
+};
+
+static struct swpipeline PIPELINE =
+{
+    .camera_to_clip = {0},
+    .model_to_camera = {0},
+    .floatframe = {0},
+    .rasterframe = {0},
+    .error = SWPIPELINE_ERROR_NONE,
+    .negate_axes =
+    {
+        false, true, false
+    },
+    .clip_to_ndc_enabled = true,
+    .per_vertex_color_blending_enabled = true,
+    .perspective_correct_sampling_enabled = true
+};
+
+void pipeline_setup(size_t width, size_t height)
+{
+    pipeline_teardown();
+    
+    if (!CHKRES(matstack_new(&PIPELINE.model_to_camera))) {
+        goto error;
+    }
+    
+    if (!CHKRES(matstack_new(&PIPELINE.camera_to_clip))) {
+        goto error;
+    }
+    
+    if (!CHKRES(swrasterframe_new(&PIPELINE.rasterframe, width, height))) {
+        goto error;
+    }
+    
+    pipeline_matrix_perspective_wh((float)width, (float)height);
+    
+    return;
+    
+error:
+    PIPELINE.error = SWPIPELINE_ERROR_ALLOC_FAILURE;
+}
+
+void pipeline_teardown(void)
+{
+    swrasterframe_free(&PIPELINE.rasterframe);
+    swfloatframe_free(&PIPELINE.floatframe);
+    matstack_del(&PIPELINE.camera_to_clip);
+    matstack_del(&PIPELINE.model_to_camera);
+    
+    PIPELINE.error = SWPIPELINE_ERROR_NONE;
+}
+
+bool pipeline_valid(void)
+{
+    return PIPELINE.error == SWPIPELINE_ERROR_NONE;
+}
+
+void pipeline_matrix_rotate(float angle, vec3 axes)
+{
+    matstack_rotate(&PIPELINE.model_to_camera, angle, axes);
+}
+
+void pipeline_matrix_translate(vec3 t)
+{
+    matstack_translate(&PIPELINE.model_to_camera, t);
+}
+
+void pipeline_matrix_scale(vec3 s)
+{
+    matstack_scale(&PIPELINE.model_to_camera, s);
+}
+
+void pipeline_matrix_perspective_wh(float width, float height)
+{
+    matstack_perspective(&PIPELINE.camera_to_clip, 45.0f, width, height, 0.01f, 100.0f);
+}
+
+void pipeline_draw_triangles(void)
+{
+    
+}
+
 static void i32vec2_to_vec2(vec2 r, const i32vec2 src)
 {
     r[0] = (float)src[0];
@@ -70,14 +189,20 @@ void swfill_ndc_vertex_to_screen(struct swraster_vertex* result, const struct sw
 
 void swfill(struct swrasterframe* frame)
 {
+#if SCREENTEST
     swfill_screentest(frame);
+#endif
 }
 
 void swrasterize(struct swrasterframe* frame, struct swraster_tri* triangle)
 {
     for (ssize_t y = 0; y < (ssize_t)frame->height; ++y) {
         for (ssize_t x = 0; x < (ssize_t)frame->width; ++x) {
-            vec2 coords = { (float)x, (float)y };
+            vec2 coords =
+            {
+                (float)x,
+                (float)y
+            };
 
             bool is_in_tri = true;
             
@@ -94,14 +219,13 @@ void swrasterize(struct swrasterframe* frame, struct swraster_tri* triangle)
                 }
                 i++;
             }
-        
             
             if (is_in_tri) {
                 // for per-vertex color blending, we want to perform a blending
                 // based on the pixel's distance in the triangle
                 // from each vertex. We then can perform more computations
                 // from there.
-                if (SWPIPELINE.per_vertex_color_blending_enabled) {
+                if (true) {
                     struct tri_interp_screen_in blend_params = {0};
                     
                     memcpy(blend_params.abc_col[0], triangle->positions.a.abc[0].color, sizeof(vec4));

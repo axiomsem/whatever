@@ -15,16 +15,7 @@
 SW_IMPL_VERTEX2(attrib, vec4, float, position, vec4, float, color)
 SW_IMPL_VERTEX2(raster, vec2, float, position, vec4, float, color)
 
-struct swpipeline SWPIPELINE =
-{
-    .negate_axes =
-    {
-        false, true, false
-    },
-    .clip_to_ndc_enabled = true,
-    .per_vertex_color_blending_enabled = true,
-    .perspective_correct_sampling_enabled = true
-};
+
 
 #ifndef PRINT_TRI_VERTS
 #define PRINT_TRI_VERTS 0
