@@ -60,7 +60,7 @@ void swfill_ndc_vertex_to_screen(struct swraster_vertex* result, const struct sw
     vec4 result4 = {0};
     mat4x4_mul_vec4(result4, ndc2scrn, screen_vertex.position);
     
-    memcpy(result->color, screen_vertex.position, sizeof(screen_vertex.position));
+    memcpy(result->color, screen_vertex.color, sizeof(vec4));
     
     // take screen space position and assign to result
     for (size_t i = 0; i < dim_raster_position; ++i) {
