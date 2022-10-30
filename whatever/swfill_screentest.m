@@ -60,36 +60,37 @@ static void swfill_screentest_screenspace_flipy(struct swrasterframe* frame)
     swrasterize(frame, &triangle);
 }
 
-struct swfill_ndc_tri_in
+struct vs_color
 {
     mat4x4 transform;
     vec4 abc[3];
+    vec4 color[3];
     uint8_t negate_ax[3];
     uint8_t has_clip;
 };
 
-static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe* frame)
+static void swfill_ndc_tri(struct vs_color* input, struct swrasterframe* frame)
 {
     struct swattrib_vertex abc[3] =
     {
         // struct swvertex
         {
             .position = { input->abc[0][0], input->abc[0][1], input->abc[0][2], 1.0f },
-            .color = { 255, 0, 0, 255 }
+            .color = { input->color[0][0], input->color[0][1], input->color[0][2], 1.0f }
         },
         // struct swvertex
         {
             .position = { input->abc[1][0], input->abc[1][1], input->abc[1][2], 1.0f },
-            .color = { 255, 0, 0, 255 }
+            .color = { input->color[1][0], input->color[1][1], input->color[1][2], 1.0f }
         },
         // struct swvertex
         {
             .position = { input->abc[2][0], input->abc[2][1], input->abc[2][2], 1.0f },
-            .color = { 255, 0, 0, 255 }
+            .color = { input->color[2][0], input->color[2][1], input->color[2][2], 1.0f }
         }
     };
     
-    struct swraster_vertex vabc[3];
+    struct swraster_vertex vabc[3] = {0};
     
     for (size_t i = 0; i < 3; i++) {
         // need to make a copy, since here we're transforming abc[i].position to some other
@@ -115,8 +116,6 @@ static void swfill_ndc_tri(struct swfill_ndc_tri_in* input, struct swrasterframe
                     t[j] = input->negate_ax[j] ? (-t[j]) : (t[j]);
                 }
             }
-            
-            
             
             memcpy(abc[i].position, t, sizeof(t));
         }
@@ -146,7 +145,7 @@ static void swfill_screentest_ndc_negatey_rotate(struct swrasterframe* frame, ve
     const float CY = SIZE;
     const float CZ = DEPTH;
     
-    struct swfill_ndc_tri_in args =
+    struct vs_color args =
     {
         // transform
         { 0 },
@@ -324,26 +323,31 @@ static void swfill_screentest_persp_clip_ndc_negatey(struct swrasterframe* frame
 {
     const struct mesh_template* tmpl = &g_mesh_template;
     
-    struct swfill_ndc_tri_in args =
+    struct vs_color args =
     {
-        // transform
+        .transform =
         {
             0
         },
-        // abc
+        .abc =
         {
             { tmpl->triangle[0][0], tmpl->triangle[0][1], tmpl->triangle[0][2], 1.0f },
             { tmpl->triangle[1][0], tmpl->triangle[1][1], tmpl->triangle[1][2], 1.0f },
             { tmpl->triangle[2][0], tmpl->triangle[2][1], tmpl->triangle[2][2], 1.0f }
         },
-        // negate_ax
+        .color =
+        {
+            COLORF_R,
+            COLORF_G,
+            COLORF_B
+        },
+        .negate_ax =
         {
             false,
             true,
             false
         },
-        // has_cliip
-        true
+        .has_clip = true
     };
     
     memcpy(args.transform, mod2cam, sizeof(mat4x4));
