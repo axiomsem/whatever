@@ -29,6 +29,10 @@ void oom_impl(const char* file, const char* func, int line);
 
 #define OOM() oom_impl(__FILE__, __func__, __LINE__)
 
+#define COLORF_R { 1.0f, 0.0f, 0.0f, 1.0f }
+#define COLORF_G { 0.0f, 1.0f, 0.0f, 1.0f } 
+#define COLORF_B { 0.0f, 0.0f, 1.0f, 1.0f }
+
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal);
 
 struct mesh_template
