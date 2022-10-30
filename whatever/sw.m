@@ -17,10 +17,15 @@ static void i32vec2_to_vec2(vec2 r, const i32vec2 src)
 void swfill_ndc_vertex_to_screen(struct swraster_vertex* result, const struct swattrib_vertex* vndc, const struct swrasterframe* frame)
 {
     struct swattrib_vertex screen_vertex;
+    // copying the color from vndc to this
+    // isn't terribly necessary, but it is better
+    // for memory locality, since we have to perform
+    // calculations on it below.
     memcpy(&screen_vertex, vndc, sizeof(screen_vertex));
     
     // conversion for any x from [-1, 1] to some [0,y] is:
-    // (x + 1) * (y/2)
+    // (x + 1) * (y/2);
+    // the addition here allows for this to work.
     for (size_t i = 0; i < 3ull; ++i)
     {
         screen_vertex.position[i] += 1.0f;
@@ -55,7 +60,12 @@ void swfill_ndc_vertex_to_screen(struct swraster_vertex* result, const struct sw
     vec4 result4 = {0};
     mat4x4_mul_vec4(result4, ndc2scrn, screen_vertex.position);
     
-    memcpy(result->color, screen_vertex.color, sizeof(screen_vertex.color));
+    // copy over color from screen vertex
+    for (size_t i = 0; i < 4; ++i) {
+        result->color[i] = (uint8_t)(screen_vertex.color[i] * 255.0f);
+    }
+    
+    // take screen space position and assign to result
     for (size_t i = 0; i < dim_raster_position; ++i) {
         result->position[i] = result4[i];
     }
