@@ -68,7 +68,7 @@ const size_t offset_##name##_##mem2 = offsetof(struct sw##name##_vertex, mem2);
 typedef uint8_t swcolor_t[4];
 
 // vertex 3 float color 4 float
-SW_DECL_VERTEX2(raster, vec2, position, swcolor_t, color)
+SW_DECL_VERTEX2(raster, vec2, position, vec4, color)
 
 SW_DECL_VERTEX2(attrib, vec4, position, vec4, color);
 

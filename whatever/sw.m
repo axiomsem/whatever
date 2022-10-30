@@ -60,10 +60,7 @@ void swfill_ndc_vertex_to_screen(struct swraster_vertex* result, const struct sw
     vec4 result4 = {0};
     mat4x4_mul_vec4(result4, ndc2scrn, screen_vertex.position);
     
-    // copy over color from screen vertex
-    for (size_t i = 0; i < 4; ++i) {
-        result->color[i] = (uint8_t)(screen_vertex.color[i] * 255.0f);
-    }
+    memcpy(result->color, screen_vertex.position, sizeof(screen_vertex.position));
     
     // take screen space position and assign to result
     for (size_t i = 0; i < dim_raster_position; ++i) {
@@ -76,8 +73,6 @@ void swfill(struct swrasterframe* frame)
     swfill_screentest(frame);
 }
 
-
- 
 void swrasterize(struct swrasterframe* frame, struct swraster_tri* triangle)
 {
     for (ssize_t y = 0; y < (ssize_t)frame->height; ++y) {
@@ -100,15 +95,48 @@ void swrasterize(struct swrasterframe* frame, struct swraster_tri* triangle)
                 i++;
             }
             
+            const bool do_blending = true;
+            
             if (is_in_tri) {
-                uint32_t r = (uint32_t)triangle->positions.a.abc[0].color[0];
-                uint32_t g = (uint32_t)triangle->positions.a.abc[0].color[1];
-                uint32_t b = (uint32_t)triangle->positions.a.abc[0].color[2];
-                uint32_t a = 255;
-                
-                const uint32_t pixel = r | (g << 8) | (b << 16) | (a << 24);
-                
-                frame->buffer[y * frame->width + x] = pixel;
+                // for do_blending, we want to perform a blending
+                // based on the pixel's distance in the triangle
+                // from each vertex. We then can perform more computations
+                // from there.
+                if (do_blending) {
+                    struct tri_interp_screen_in blend_params = {0};
+                    
+                    memcpy(blend_params.abc_col[0], triangle->positions.a.abc[0].color, sizeof(vec4));
+                    memcpy(blend_params.abc_col[1], triangle->positions.a.abc[1].color, sizeof(vec4));
+                    memcpy(blend_params.abc_col[2], triangle->positions.a.abc[2].color, sizeof(vec4));
+                    
+                    memcpy(blend_params.abc_pos[0], triangle->positions.a.abc[0].position, sizeof(vec2));
+                    memcpy(blend_params.abc_pos[1], triangle->positions.a.abc[1].position, sizeof(vec2));
+                    memcpy(blend_params.abc_pos[2], triangle->positions.a.abc[2].position, sizeof(vec2));
+                    
+                    memcpy(blend_params.p, coords, sizeof(coords));
+                    
+                    vec4 output = {0};
+                    tri_interp_screen(&blend_params, output);
+                    
+                    uint32_t r = (uint32_t)(output[0] * 255.0f);
+                    uint32_t g = (uint32_t)(output[1] * 255.0f);
+                    uint32_t b = (uint32_t)(output[2] * 255.0f);
+                    uint32_t a = 255;
+                    
+                    const uint32_t pixel = r | (g << 8) | (b << 16) | (a << 24);
+                    frame->buffer[y * frame->width + x] = pixel;
+                }
+                else {
+                    
+                    uint32_t r = (uint32_t)triangle->positions.a.abc[0].color[0];
+                    uint32_t g = (uint32_t)triangle->positions.a.abc[0].color[1];
+                    uint32_t b = (uint32_t)triangle->positions.a.abc[0].color[2];
+                    uint32_t a = 255;
+                    
+                    const uint32_t pixel = r | (g << 8) | (b << 16) | (a << 24);
+                    
+                    frame->buffer[y * frame->width + x] = pixel;
+                }
             }
             
         }

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-SW_IMPL_VERTEX2(attrib, vec4, float, position, swcolor_t, uint8_t, color)
+SW_IMPL_VERTEX2(attrib, vec4, float, position, vec4, float, color)
 SW_IMPL_VERTEX2(raster, vec2, float, position, vec4, float, color)
 
 #ifndef PRINT_TRI_VERTS
