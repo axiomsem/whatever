@@ -28,6 +28,7 @@ struct swpipeline
     struct vec2_elem* raster_positions;
     struct vec2_elem* raster_edges;
     struct vec2_elem* raster_normals;
+    
     struct vec4_elem* raster_colors;
     
     struct matstack camera_to_clip;

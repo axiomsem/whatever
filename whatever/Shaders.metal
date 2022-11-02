@@ -31,6 +31,12 @@ typedef struct
 
 typedef struct
 {
+    float4 position [[attribute(VertexAttributePosition)]];
+    float4 color [[attribute(VertexAttributeColor)]];
+} SceneVertex;
+
+typedef struct
+{
     float4 position [[position]];
     float2 texCoord;
 } ColorInOut;
@@ -42,6 +48,12 @@ typedef struct
     float2 texCoord;
 #endif
 } RasterColorInOut;
+
+typedef struct
+{
+    float4 position [[position]];
+    float4 color;
+} SceneColorInOut;
 
 vertex ColorInOut vertexShader(Vertex in [[stage_in]],
                                constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
@@ -101,3 +113,19 @@ fragment float4 rasterFragmentShader(RasterColorInOut in [[stage_in]])
     return float4(1.0f, 0.0f, 0.0f, 1.0f);
 }
 #endif
+
+vertex SceneColorInOut sceneVertexShader(SceneVertex in [[stage_in]],
+                                         constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
+{
+    SceneColorInOut out;
+
+    out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * in.position;
+    out.color = in.color;
+
+    return out;
+}
+
+fragment float4 sceneFragmentShader(SceneColorInOut in [[stage_in]])
+{
+    return in.color;
+}

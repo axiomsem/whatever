@@ -28,18 +28,25 @@ typedef struct _RasterVertex
 #endif
 } RasterVertex;
 
+typedef struct _SceneVertex
+{
+    simd_float4 position;
+    simd_float4 color;
+} SceneVertex;
+
 typedef enum _DrawingMode
 {
     // Spinning cube + texture
     DrawingModeDefault = 0,
     // Draw to offscreen framebuffer; copy to passthrough shader
     DrawingModeRaster,
-    // Draw the cube texture to framebuffer
-    DrawingModeCubeTexture
+    // Draw a dead simple scene with some effects and an fps camera
+    DrawingModeScene
+    
 }
 DrawingMode;
 
-static const DrawingMode kDrawingMode = DrawingModeRaster;
+static const DrawingMode kDrawingMode = DrawingModeScene;
 
 @implementation Renderer
 {
@@ -99,7 +106,7 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
     view.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
     view.colorPixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
     view.sampleCount = 1;
-    view.clearColor = MTLClearColorMake(0.0, 0.5, 0.0, 1.0);
+    view.clearColor = MTLClearColorMake(0.2, 0.2, 0.5, 1.0);
 
     _mtlVertexDescriptor = [[MTLVertexDescriptor alloc] init];
 
@@ -143,6 +150,21 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
 
         }
             break;
+        case DrawingModeScene:
+        {
+            _mtlVertexDescriptor.attributes[VertexAttributePosition].format = MTLVertexFormatFloat4;
+            _mtlVertexDescriptor.attributes[VertexAttributePosition].offset = offsetof(SceneVertex, position);
+            _mtlVertexDescriptor.attributes[VertexAttributePosition].bufferIndex = 0;
+
+            _mtlVertexDescriptor.attributes[VertexAttributeColor].format = MTLVertexFormatFloat4;
+            _mtlVertexDescriptor.attributes[VertexAttributeColor].offset = offsetof(SceneVertex, color);
+            _mtlVertexDescriptor.attributes[VertexAttributeColor].bufferIndex = 0;
+            
+            _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stride = sizeof(SceneVertex);
+            _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stepRate = 1;
+            _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stepFunction = MTLVertexStepFunctionPerVertex;
+        }
+            break;
         default:
             [self _exitUnknownDrawingMode];
             break;
@@ -168,6 +190,12 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
         {
             vertexFunction = [defaultLibrary newFunctionWithName:@"rasterVertexShader"];
             fragmentFunction = [defaultLibrary newFunctionWithName:@"rasterFragmentShader"];
+        }
+            break;
+        case DrawingModeScene:
+        {
+            vertexFunction = [defaultLibrary newFunctionWithName:@"sceneVertexShader"];
+            fragmentFunction = [defaultLibrary newFunctionWithName:@"sceneFragmentShader"];
         }
             break;
         default:
@@ -210,6 +238,14 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
             _depthState = [_device newDepthStencilStateWithDescriptor:depthStateDesc];
         }
             break;
+        case DrawingModeScene:
+        {
+            MTLDepthStencilDescriptor *depthStateDesc = [[MTLDepthStencilDescriptor alloc] init];
+            depthStateDesc.depthCompareFunction = MTLCompareFunctionLess;
+            depthStateDesc.depthWriteEnabled = YES;
+            _depthState = [_device newDepthStencilStateWithDescriptor:depthStateDesc];
+        }
+            break;
     }
 
     NSUInteger uniformBufferSize = kAlignedUniformsSize * kMaxBuffersInFlight;
@@ -242,6 +278,51 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
     for (size_t i = 0; i < numPixels; ++i) {
         frame.buffer[i] = color;
     }
+}
+
+- (void)_loadSceneAssetsWithview:(nonnull MTKView*)view
+{
+    // Sending these as two triangles
+    // using NDC pass through coordinates
+    
+    const float SIZE = 1.0f;
+    
+    // pos lower left
+    const float PLLX = -SIZE;
+    const float PLLY = -SIZE;
+    
+    // pos lower right
+    const float PLRX = SIZE;
+    const float PLRY = -SIZE;
+    
+    // pos upper left
+    const float PULX = -SIZE;
+    const float PULY = SIZE;
+    
+    // pos upper right
+    const float PURX = SIZE;
+    const float PURY = SIZE;
+    
+    const float Z = 0.0f;
+    const float W = 1.0f;
+    // Winding order is CCW
+    static const SceneVertex triangleVertices[] =
+    {
+        // Lower left
+        { { PLLX, PLLY, Z, W }, COLORF_R },
+        // Lower right
+        { { PLRX, PLRY, Z, W }, COLORF_G},
+        // Upper right
+        { { PURX, PURY, Z, W }, COLORF_B }
+    };
+
+    
+    const size_t vertexSize = sizeof(SceneVertex);
+    const size_t bufferSize = vertexSize * 3;
+    
+    _vertexBuffer = [_device newBufferWithBytes:triangleVertices
+                                         length:bufferSize
+                                        options:MTLResourceOptionCPUCacheModeDefault | MTLResourceStorageModeManaged];
 }
 
 - (void)_loadRasterAssetsWithView:(nonnull MTKView*)view
@@ -384,6 +465,9 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
         case DrawingModeRaster:
             [self _loadRasterAssetsWithView:view];
             break;
+        case DrawingModeScene:
+            [self _loadSceneAssetsWithview:view];
+            break;
         default:
             [self _exitUnknownDrawingMode];
             break;
@@ -499,6 +583,87 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
     [commandBuffer commit];
 }
 
+- (void)drawInMTKViewScene:(nonnull MTKView *)view
+{
+    /// Per frame updates here
+    if (dispatch_semaphore_wait(_inFlightSemaphore, DISPATCH_TIME_NOW) != 0)
+    {
+        return;
+    }
+
+    // Will free if frame is already allocated
+    NSSize sz = view.frame.size;
+    if (swrasterframe_new(&frame, sz.width, sz.height) == SW_E_FAIL)
+    {
+        NSLog(@"Renderer drawInMTKViewRaster: could not allocate new frame");
+        return;
+    }
+    
+    [self _updateDynamicBufferState];
+
+    [self _updateGameState];
+    
+    id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+    commandBuffer.label = @"MyCommand";
+    
+    id<MTLFence> fence = [_device newFence];
+
+
+    __block dispatch_semaphore_t block_sema = _inFlightSemaphore;
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer)
+     {
+         dispatch_semaphore_signal(block_sema);
+     }];
+    
+    _frameBufferTexture = [[Texture alloc] initWithFrame:&frame
+                                                  device:_device
+                                           commandBuffer:commandBuffer
+                                                   fence:fence];
+    _colorMap = [_frameBufferTexture texture];
+
+    /// Delay getting the currentRenderPassDescriptor until we absolutely need it to avoid
+    ///   holding onto the drawable and blocking the display pipeline any longer than necessary
+    MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
+
+    if(renderPassDescriptor != nil) {
+        /// Final pass rendering code here
+
+        id <MTLRenderCommandEncoder> renderEncoder =
+            [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+        
+        [renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex | MTLRenderStageFragment | MTLRenderStageTile];
+        
+        renderEncoder.label = @"MyRenderEncoder";
+
+        [renderEncoder pushDebugGroup:@"DrawBox"];
+
+        [renderEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
+        [renderEncoder setCullMode:MTLCullModeNone];
+        [renderEncoder setRenderPipelineState:_pipelineState];
+        [renderEncoder setDepthStencilState:_depthState];
+
+        [renderEncoder setVertexBuffer:_vertexBuffer
+                                offset:0
+                               atIndex:0];
+        
+        [renderEncoder setVertexBuffer:_dynamicUniformBuffer
+                                offset:_uniformBufferOffset
+                               atIndex:BufferIndexUniforms];
+        
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3];
+
+        [renderEncoder popDebugGroup];
+
+        [renderEncoder endEncoding];
+
+        [commandBuffer presentDrawable:view.currentDrawable];
+    }
+
+    [commandBuffer commit];
+}
+
+
+
 - (void)drawInMTKViewRaster:(nonnull MTKView *)view
 {
     /// Per frame updates here
@@ -593,6 +758,11 @@ static const DrawingMode kDrawingMode = DrawingModeRaster;
         case DrawingModeRaster:
         {
             [self drawInMTKViewRaster:view];
+        }
+            break;
+        case DrawingModeScene:
+        {
+            [self drawInMTKViewScene:view];
         }
             break;
         default:
