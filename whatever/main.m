@@ -15,7 +15,9 @@ int main(int argc, const char * argv[]) {
     NSApplication * application = [NSApplication sharedApplication];
 
     SceneAppDelegate * appDelegate = [[SceneAppDelegate alloc] init];
-
+    
+    
+    
     [application setDelegate:appDelegate];
     [application run];
 

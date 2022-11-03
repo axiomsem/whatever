@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SceneView : MTKView
+@interface SceneView : NSView
 
 @end
 
