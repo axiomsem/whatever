@@ -74,18 +74,19 @@ matrix_float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, f
     }};
 }
 
-
 typedef struct _FPSCamera
 {
     simd_float4x4 orientation;
     simd_float4x4 inverseOrientation;
+    simd_float4x4 translation;
     
     simd_float4 origin;
     simd_float4 orientAngles;
     
     float lastMouseX;
     float lastMouseY;
-} FPSCamera;
+}
+FPSCamera;
 
 void FPSCamera_Init(FPSCamera* camera)
 {
@@ -113,8 +114,6 @@ void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY)
     
     simd_float4x4 orientY = matrix4x4_rotation(camera->orientAngles.y * deg2rad, simd_make_float3(0.0f, 1.0f, 0.0f));
     simd_float4x4 orientX = matrix4x4_rotation(camera->orientAngles.x * deg2rad, simd_make_float3(1.0f, 0.0f, 0.0f));
-    
-    
     
     camera->orientation = matrix_multiply(orientY, orientX);
     camera->inverseOrientation = matrix_invert(camera->orientation);
@@ -511,7 +510,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 - (void)_loadDefaultAssetsWithView:(nonnull MTKView*)view
 {
     NSError *error;
-    
+        
     MTKMeshBufferAllocator *metalAllocator = [[MTKMeshBufferAllocator alloc]
                                               initWithDevice: _device];
     

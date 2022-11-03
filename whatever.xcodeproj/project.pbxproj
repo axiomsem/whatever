@@ -18,10 +18,12 @@
 		CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */ = {isa = PBXBuildFile; fileRef = CE7BC09328FD0DFC002EB35C /* Texture.m */; };
 		CE994BE328EE749A008B8F4A /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = CE994BE228EE749A008B8F4A /* Shaders.metal */; };
 		CE994BE628EE749C008B8F4A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE994BE528EE749C008B8F4A /* Assets.xcassets */; };
-		CE994BE928EE749C008B8F4A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CE994BE728EE749C008B8F4A /* Main.storyboard */; };
 		CE994BF628EE749C008B8F4A /* whateverTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994BF528EE749C008B8F4A /* whateverTests.m */; };
 		CE994C0028EE749C008B8F4A /* whateverUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994BFF28EE749C008B8F4A /* whateverUITests.m */; };
 		CE994C0228EE749C008B8F4A /* whateverUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994C0128EE749C008B8F4A /* whateverUITestsLaunchTests.m */; };
+		CEB59262291374F5009EAC32 /* SceneView.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB59261291374F5009EAC32 /* SceneView.m */; };
+		CEB5926529137F4C009EAC32 /* SceneAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB5926429137F4C009EAC32 /* SceneAppDelegate.m */; };
+		CEB5926A291380A0009EAC32 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB59268291380A0009EAC32 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,13 +66,17 @@
 		CE994BE228EE749A008B8F4A /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		CE994BE428EE749A008B8F4A /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
 		CE994BE528EE749C008B8F4A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		CE994BE828EE749C008B8F4A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		CE994BEC28EE749C008B8F4A /* whatever.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = whatever.entitlements; sourceTree = "<group>"; };
 		CE994BF128EE749C008B8F4A /* whateverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = whateverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE994BF528EE749C008B8F4A /* whateverTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = whateverTests.m; sourceTree = "<group>"; };
 		CE994BFB28EE749C008B8F4A /* whateverUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = whateverUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE994BFF28EE749C008B8F4A /* whateverUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = whateverUITests.m; sourceTree = "<group>"; };
 		CE994C0128EE749C008B8F4A /* whateverUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = whateverUITestsLaunchTests.m; sourceTree = "<group>"; };
+		CEB59260291374F5009EAC32 /* SceneView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneView.h; sourceTree = "<group>"; };
+		CEB59261291374F5009EAC32 /* SceneView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneView.m; sourceTree = "<group>"; };
+		CEB5926329137EEF009EAC32 /* SceneAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneAppDelegate.h; sourceTree = "<group>"; };
+		CEB5926429137F4C009EAC32 /* SceneAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneAppDelegate.m; sourceTree = "<group>"; };
+		CEB59269291380A0009EAC32 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +127,7 @@
 		CE994BD828EE749A008B8F4A /* whatever */ = {
 			isa = PBXGroup;
 			children = (
+				CEB59268291380A0009EAC32 /* Main.storyboard */,
 				CE57D2FE2908DC7C00AB1DC4 /* common.h */,
 				CE78106128FB9C9D00AC3831 /* sw.m */,
 				CE78105D28FB71EB00AC3831 /* swcommon.m */,
@@ -134,7 +141,6 @@
 				CE994BE228EE749A008B8F4A /* Shaders.metal */,
 				CE994BE428EE749A008B8F4A /* ShaderTypes.h */,
 				CE994BE528EE749C008B8F4A /* Assets.xcassets */,
-				CE994BE728EE749C008B8F4A /* Main.storyboard */,
 				CE994BEC28EE749C008B8F4A /* whatever.entitlements */,
 				CE54265E28F9118E003DCCCD /* swcommon.h */,
 				CE54265F28F911DA003DCCCD /* sw.h */,
@@ -144,6 +150,10 @@
 				CE57D2F82908BCC400AB1DC4 /* swfill_screentest.h */,
 				CE57D2F92908BCC400AB1DC4 /* swfill_screentest.m */,
 				CE57D2FC2908C07400AB1DC4 /* common.m */,
+				CEB59260291374F5009EAC32 /* SceneView.h */,
+				CEB59261291374F5009EAC32 /* SceneView.m */,
+				CEB5926329137EEF009EAC32 /* SceneAppDelegate.h */,
+				CEB5926429137F4C009EAC32 /* SceneAppDelegate.m */,
 			);
 			path = whatever;
 			sourceTree = "<group>";
@@ -269,7 +279,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE994BE628EE749C008B8F4A /* Assets.xcassets in Resources */,
-				CE994BE928EE749C008B8F4A /* Main.storyboard in Resources */,
+				CEB5926A291380A0009EAC32 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,9 +307,11 @@
 				CE54265D28F9111E003DCCCD /* main.m in Sources */,
 				CE54265C28F9111E003DCCCD /* Renderer.m in Sources */,
 				CE78105F28FB71EC00AC3831 /* swcommon.m in Sources */,
+				CEB5926529137F4C009EAC32 /* SceneAppDelegate.m in Sources */,
 				CE57D2FA2908BCC400AB1DC4 /* swfill_screentest.m in Sources */,
 				CE54265A28F9111E003DCCCD /* AppDelegate.m in Sources */,
 				CE78106228FB9C9D00AC3831 /* sw.m in Sources */,
+				CEB59262291374F5009EAC32 /* SceneView.m in Sources */,
 				CE57D2FD2908C07400AB1DC4 /* common.m in Sources */,
 				CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */,
 				CE54265B28F9111E003DCCCD /* GameViewController.m in Sources */,
@@ -340,10 +352,10 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		CE994BE728EE749C008B8F4A /* Main.storyboard */ = {
+		CEB59268291380A0009EAC32 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				CE994BE828EE749C008B8F4A /* Base */,
+				CEB59269291380A0009EAC32 /* Base */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
