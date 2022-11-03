@@ -695,7 +695,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     
     FPSCamera_Update(&fpsCamera, mouseLoc.x, mouseLoc.y);
     
-    NSLog(@"x = %f, y = %f", mouseLoc.x, mouseLoc.y);
+    //NSLog(@"x = %f, y = %f", mouseLoc.x, mouseLoc.y);
     
     /// Per frame updates here
     if (dispatch_semaphore_wait(_inFlightSemaphore, DISPATCH_TIME_NOW) != 0)
@@ -704,12 +704,12 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     }
     
     // Will free if frame is already allocated
-    NSSize sz = view.frame.size;
-    if (swrasterframe_new(&frame, sz.width, sz.height) == SW_E_FAIL)
-    {
-        NSLog(@"Renderer drawInMTKViewRaster: could not allocate new frame");
-        return;
-    }
+    //NSSize sz = view.frame.size;
+   // if (swrasterframe_new(&frame, sz.width, sz.height) == SW_E_FAIL)
+    //{
+      //  NSLog(@"Renderer drawInMTKViewRaster: could not allocate new frame");
+        //return;
+    ///}
     
     [self _updateDynamicBufferState];
 
@@ -727,11 +727,11 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
          dispatch_semaphore_signal(block_sema);
      }];
     
-    _frameBufferTexture = [[Texture alloc] initWithFrame:&frame
-                                                  device:_device
-                                           commandBuffer:commandBuffer
-                                                   fence:fence];
-    _colorMap = [_frameBufferTexture texture];
+ //   _frameBufferTexture = [[Texture alloc] initWithFrame:&frame
+ //                                                 device:_device
+ //                                          commandBuffer:commandBuffer
+ //                                                  fence:fence];
+ //   _colorMap = [_frameBufferTexture texture];
 
     /// Delay getting the currentRenderPassDescriptor until we absolutely need it to avoid
     ///   holding onto the drawable and blocking the display pipeline any longer than necessary
