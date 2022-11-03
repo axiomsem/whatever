@@ -20,6 +20,106 @@ static const NSUInteger kMaxBuffersInFlight = 3;
 
 static const size_t kAlignedUniformsSize = (sizeof(Uniforms) & ~0xFF) + 0x100;
 
+static simd_float4x4 Matrix_RotateY(float angleDegrees)
+{
+    float angleRad = deg2rad * angleDegrees;
+    
+    simd_float4 r0 = simd_make_float4(cosf(angleRad), 0.0f, sinf(angleRad), 0.0f);
+    simd_float4 r1 = simd_make_float4(0.0f, 1.0f, 0.0f, 0.0f);
+    simd_float4 r2 = simd_make_float4(-sinf(angleRad), 0.0f, cosf(angleRad), 0.0f);
+    simd_float4 r3 = simd_make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    return simd_matrix_from_rows(r0, r1, r2, r3);
+}
+
+#pragma mark Matrix Math Utilities
+
+matrix_float4x4 matrix4x4_translation(float tx, float ty, float tz)
+{
+    return (matrix_float4x4) {{
+        { 1,   0,  0,  0 },
+        { 0,   1,  0,  0 },
+        { 0,   0,  1,  0 },
+        { tx, ty, tz,  1 }
+    }};
+}
+
+static matrix_float4x4 matrix4x4_rotation(float radians, vector_float3 axis)
+{
+    axis = vector_normalize(axis);
+    float ct = cosf(radians);
+    float st = sinf(radians);
+    float ci = 1 - ct;
+    float x = axis.x, y = axis.y, z = axis.z;
+
+    return (matrix_float4x4) {{
+        { ct + x * x * ci,     y * x * ci + z * st, z * x * ci - y * st, 0},
+        { x * y * ci - z * st,     ct + y * y * ci, z * y * ci + x * st, 0},
+        { x * z * ci + y * st, y * z * ci - x * st,     ct + z * z * ci, 0},
+        {                   0,                   0,                   0, 1}
+    }};
+}
+
+matrix_float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, float nearZ, float farZ)
+{
+    float ys = 1 / tanf(fovyRadians * 0.5);
+    float xs = ys / aspect;
+    float zs = farZ / (nearZ - farZ);
+
+    return (matrix_float4x4) {{
+        { xs,   0,          0,  0 },
+        {  0,  ys,          0,  0 },
+        {  0,   0,         zs, -1 },
+        {  0,   0, nearZ * zs,  0 }
+    }};
+}
+
+
+typedef struct _FPSCamera
+{
+    simd_float4x4 orientation;
+    simd_float4x4 inverseOrientation;
+    
+    simd_float4 origin;
+    simd_float4 orientAngles;
+    
+    float lastMouseX;
+    float lastMouseY;
+} FPSCamera;
+
+void FPSCamera_Init(FPSCamera* camera)
+{
+    camera->origin = simd_make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+    camera->orientAngles = simd_make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    // identity
+    camera->orientation = matrix_identity_float4x4;
+    
+    camera->inverseOrientation = matrix_identity_float4x4;
+    
+    camera->lastMouseX = 0.0f;
+    camera->lastMouseY = 0.0f;
+}
+
+void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY)
+{
+    float rotdY = mouseX - camera->lastMouseX;
+    float rotdX = mouseY - camera->lastMouseY;
+    
+    camera->orientAngles.x += rotdX;
+    camera->orientAngles.y += rotdY;
+    
+    camera->lastMouseX = mouseX;
+    camera->lastMouseY = mouseY;
+    
+    simd_float4x4 orientY = matrix4x4_rotation(camera->orientAngles.y * deg2rad, simd_make_float3(0.0f, 1.0f, 0.0f));
+    simd_float4x4 orientX = matrix4x4_rotation(camera->orientAngles.x * deg2rad, simd_make_float3(1.0f, 0.0f, 0.0f));
+    
+    
+    
+    camera->orientation = matrix_multiply(orientY, orientX);
+    camera->inverseOrientation = matrix_invert(camera->orientation);
+}
+
 typedef struct _RasterVertex
 {
     vec4 position;
@@ -50,6 +150,8 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 
 @implementation Renderer
 {
+    FPSCamera fpsCamera;
+    
     dispatch_semaphore_t _inFlightSemaphore;
     id <MTLDevice> _device;
     id <MTLCommandQueue> _commandQueue;
@@ -101,6 +203,8 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 
 - (void)_loadMetalWithView:(nonnull MTKView *)view;
 {
+    FPSCamera_Init(&fpsCamera);
+    
     /// Load Metal state objects and initialize renderer dependent view properties
 
     view.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
@@ -494,9 +598,11 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     uniforms->projectionMatrix = _projectionMatrix;
 
     vector_float3 rotationAxis = {1, 1, 0};
+    
     matrix_float4x4 modelMatrix = matrix4x4_rotation(_rotation, rotationAxis);
-    matrix_float4x4 viewMatrix = matrix4x4_translation(0.0, 0.0, -8.0);
-
+    matrix_float4x4 translate = matrix4x4_translation(0.0, 0.0, -8.0);
+    matrix_float4x4 viewMatrix = matrix_multiply(fpsCamera.orientation, translate);
+    
     uniforms->modelViewMatrix = matrix_multiply(viewMatrix, modelMatrix);
 
     _rotation += .01;
@@ -585,12 +691,18 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 
 - (void)drawInMTKViewScene:(nonnull MTKView *)view
 {
+    NSPoint mouseLoc = view.window.mouseLocationOutsideOfEventStream;
+    
+    FPSCamera_Update(&fpsCamera, mouseLoc.x, mouseLoc.y);
+    
+    NSLog(@"x = %f, y = %f", mouseLoc.x, mouseLoc.y);
+    
     /// Per frame updates here
     if (dispatch_semaphore_wait(_inFlightSemaphore, DISPATCH_TIME_NOW) != 0)
     {
         return;
     }
-
+    
     // Will free if frame is already allocated
     NSSize sz = view.frame.size;
     if (swrasterframe_new(&frame, sz.width, sz.height) == SW_E_FAIL)
@@ -779,46 +891,5 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     _projectionMatrix = matrix_perspective_right_hand(65.0f * (M_PI / 180.0f), aspect, 0.1f, 100.0f);
 }
 
-#pragma mark Matrix Math Utilities
-
-matrix_float4x4 matrix4x4_translation(float tx, float ty, float tz)
-{
-    return (matrix_float4x4) {{
-        { 1,   0,  0,  0 },
-        { 0,   1,  0,  0 },
-        { 0,   0,  1,  0 },
-        { tx, ty, tz,  1 }
-    }};
-}
-
-static matrix_float4x4 matrix4x4_rotation(float radians, vector_float3 axis)
-{
-    axis = vector_normalize(axis);
-    float ct = cosf(radians);
-    float st = sinf(radians);
-    float ci = 1 - ct;
-    float x = axis.x, y = axis.y, z = axis.z;
-
-    return (matrix_float4x4) {{
-        { ct + x * x * ci,     y * x * ci + z * st, z * x * ci - y * st, 0},
-        { x * y * ci - z * st,     ct + y * y * ci, z * y * ci + x * st, 0},
-        { x * z * ci + y * st, y * z * ci - x * st,     ct + z * z * ci, 0},
-        {                   0,                   0,                   0, 1}
-    }};
-}
-
-matrix_float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, float nearZ, float farZ)
-{
-    float ys = 1 / tanf(fovyRadians * 0.5);
-    float xs = ys / aspect;
-    float zs = farZ / (nearZ - farZ);
-
-    return (matrix_float4x4) {{
-        { xs,   0,          0,  0 },
-        {  0,  ys,          0,  0 },
-        {  0,   0,         zs, -1 },
-        {  0,   0, nearZ * zs,  0 }
-    }};
-}
 
 @end
