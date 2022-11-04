@@ -8,7 +8,12 @@
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
 
+@interface SceneWindow : NSWindow {
+    
+}
+@end
+
 @interface SceneAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate> {
-    NSWindow * window;
+
 }
 @end

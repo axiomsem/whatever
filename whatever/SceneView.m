@@ -22,6 +22,19 @@
     NSLog(@"onKeyDown Detected; Merry Christmas, by the way.");
 }
 
+-(id)initWithFrame:(NSRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+    }
+    return self;
+}
+
+- (BOOL)becomeFirstResponder
+{
+    return YES;
+}
+
 - (BOOL)acceptsFirstResponder
 {
     return YES;

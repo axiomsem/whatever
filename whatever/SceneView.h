@@ -9,7 +9,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SceneView : NSView
+@interface SceneView : MTKView
+
+- (void)keyDown:(NSEvent *)theEvent;
+-(id)initWithFrame:(NSRect)frame;
+- (BOOL)acceptsFirstResponder;
 
 @end
 
