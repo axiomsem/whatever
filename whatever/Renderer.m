@@ -211,6 +211,8 @@ typedef struct _SceneVertex
 {
     simd_float4 position;
     simd_float4 color;
+    simd_float3 normal;
+    simd_float2 texture;
 } SceneVertex;
 
 typedef enum _DrawingMode
@@ -339,9 +341,9 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
             _mtlVertexDescriptor.attributes[VertexAttributePosition].offset = offsetof(SceneVertex, position);
             _mtlVertexDescriptor.attributes[VertexAttributePosition].bufferIndex = 0;
 
-            _mtlVertexDescriptor.attributes[VertexAttributeColor].format = MTLVertexFormatFloat4;
-            _mtlVertexDescriptor.attributes[VertexAttributeColor].offset = offsetof(SceneVertex, color);
-            _mtlVertexDescriptor.attributes[VertexAttributeColor].bufferIndex = 0;
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneColor].format = MTLVertexFormatFloat4;
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneColor].offset = offsetof(SceneVertex, color);
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneColor].bufferIndex = 0;
             
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stride = sizeof(SceneVertex);
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stepRate = 1;
@@ -488,15 +490,16 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     
     const float Z = 0.0f;
     const float W = 1.0f;
+
     // Winding order is CCW
     static const SceneVertex triangleVertices[] =
     {
         // Lower left
-        { { PLLX, PLLY, Z, W }, COLORF_R },
+        { { PLLX, PLLY, Z, W }, COLORF_R, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
         // Lower right
-        { { PLRX, PLRY, Z, W }, COLORF_G},
+        { { PLRX, PLRY, Z, W }, COLORF_G, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
         // Upper right
-        { { PURX, PURY, Z, W }, COLORF_B }
+        { { PURX, PURY, Z, W }, COLORF_B, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }
     };
 
     

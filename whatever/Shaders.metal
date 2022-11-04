@@ -32,7 +32,9 @@ typedef struct
 typedef struct
 {
     float4 position [[attribute(VertexAttributePosition)]];
-    float4 color [[attribute(VertexAttributeColor)]];
+    float4 color [[attribute(VertexAttributeSceneColor)]];
+    float3 normal [[attribute(VertexAttributeSceneNormal)]];
+    float2 texCoord [[attribute(VertexAttributeSceneTexcoord)]];
 } SceneVertex;
 
 typedef struct
