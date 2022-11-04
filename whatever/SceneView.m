@@ -11,6 +11,7 @@ typedef bool _KeyBuffer[256];
 
 @implementation SceneView
 {
+    SceneKeyFlags _keyFlags;
     _KeyBuffer _keys;
 }
 
@@ -22,13 +23,25 @@ typedef bool _KeyBuffer[256];
     }
 }
 
+#define strcode (size_t)(([theEvent.characters characterAtIndex:i]) & 0xFF)
+
 - (void)keyDown:(NSEvent *)theEvent
 {
     [super keyDown:theEvent];
     
     for (size_t i = 0; i < theEvent.characters.length; ++i) {
-        _keys[i] = true;
+        _keys[strcode] = true;
     }
+    
+    if (_keys['w']) {
+        _keyFlags |= SceneKeyForward;
+    }
+    
+    if (_keys['s']) {
+        _keyFlags |= SceneKeyBackward;
+    }
+    
+    self.keyFlags = _keyFlags;
     
     NSLog(@"onKeyDown Detected; %@", theEvent.characters);
 }
@@ -38,8 +51,18 @@ typedef bool _KeyBuffer[256];
     [super keyUp:theEvent];
     
     for (size_t i = 0; i < theEvent.characters.length; ++i) {
-        _keys[i] = false;
+        _keys[strcode] = false;
     }
+    
+    if (!_keys['w']) {
+        _keyFlags &= ~SceneKeyForward;
+    }
+    
+    if (!_keys['s']) {
+        _keyFlags &= ~SceneKeyBackward;
+    }
+    
+    self.keyFlags = _keyFlags;
     
     NSLog(@"onKeyUp Detected; %@", theEvent.characters);
 }
@@ -49,6 +72,7 @@ typedef bool _KeyBuffer[256];
     self = [super initWithFrame:frame];
     if (self) {
         memset(_keys, 0, sizeof(_keys));
+        _keyFlags = SceneKeyFlagNone;
     }
     return self;
 }

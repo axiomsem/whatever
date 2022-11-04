@@ -6,13 +6,18 @@
 //
 
 #import <MetalKit/MetalKit.h>
-#import "Renderer.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef enum _SceneKeyFlags {
+    SceneKeyFlagNone = 0,
+    SceneKeyForward = 1 << 0,
+    SceneKeyBackward = 1 << 1
+} SceneKeyFlags;
+
 @interface SceneView : MTKView
 
-- (bool)hasCharKeyDown:(char)character;
+@property SceneKeyFlags keyFlags;
 
 - (void)keyDown:(NSEvent *)theEvent;
 -(id)initWithFrame:(NSRect)frame;

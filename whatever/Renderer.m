@@ -10,6 +10,7 @@
 #include <string.h>
 #include "sw.h"
 
+#import "SceneView.h"
 #import "Renderer.h"
 #import "Texture.h"
 
@@ -74,6 +75,51 @@ matrix_float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, f
     }};
 }
 
+simd_float4 simd_add_float3(simd_float4 a, simd_float4 b)
+{
+    simd_float4 c;
+    c.x = a.x + b.x;
+    c.y = a.y + b.y;
+    c.z = a.z + b.z;
+    return c;
+}
+
+simd_float4 simd_sub_float3(simd_float4 a, simd_float4 b)
+{
+    simd_float4 c;
+    c.x = a.x - b.x;
+    c.y = a.y - b.y;
+    c.z = a.z - b.z;
+    return c;
+}
+
+simd_float4 simd_dot_float3(simd_float4 a, simd_float4 b)
+{
+    simd_float4 c;
+    c.x = a.x * b.x;
+    c.y = a.y * b.y;
+    c.z = a.z * b.z;
+    return c.x + c.y + c.z;
+}
+
+simd_float4 simd_scale_float3(simd_float4 a, float b)
+{
+    simd_float4 c;
+    c.x = a.x * b;
+    c.y = a.y * b;
+    c.z = a.z * b;
+    return c;
+}
+
+simd_float4 simd_negate_float3(simd_float4 v)
+{
+    simd_float4 c = v;
+    c.x = -c.x;
+    c.y = -c.y;
+    c.z = -c.z;
+    return c;
+}
+
 typedef struct _FPSCamera
 {
     simd_float4x4 orientation;
@@ -101,22 +147,56 @@ void FPSCamera_Init(FPSCamera* camera)
     camera->lastMouseY = 0.0f;
 }
 
-void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY)
+
+
+void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFlags Flags)
 {
+    const float FactorRot = 0.1f;
+    const float FactorT = 0.1f;
+    
     float rotdY = mouseX - camera->lastMouseX;
     float rotdX = mouseY - camera->lastMouseY;
     
-    camera->orientAngles.x += rotdX;
-    camera->orientAngles.y += rotdY;
+    // rotation
+    {
+        camera->orientAngles.x += rotdX * FactorRot;
+        camera->orientAngles.y += rotdY * FactorRot;
+        
+        camera->lastMouseX = mouseX;
+        camera->lastMouseY = mouseY;
+        
+        simd_float4x4 orientY = matrix4x4_rotation(camera->orientAngles.y * deg2rad, simd_make_float3(0.0f, 1.0f, 0.0f));
+        simd_float4x4 orientX = matrix4x4_rotation(camera->orientAngles.x * deg2rad, simd_make_float3(1.0f, 0.0f, 0.0f));
+        
+        camera->orientation = matrix_multiply(orientY, orientX);
+        camera->inverseOrientation = matrix_invert(camera->orientation);
+    }
     
-    camera->lastMouseX = mouseX;
-    camera->lastMouseY = mouseY;
-    
-    simd_float4x4 orientY = matrix4x4_rotation(camera->orientAngles.y * deg2rad, simd_make_float3(0.0f, 1.0f, 0.0f));
-    simd_float4x4 orientX = matrix4x4_rotation(camera->orientAngles.x * deg2rad, simd_make_float3(1.0f, 0.0f, 0.0f));
-    
-    camera->orientation = matrix_multiply(orientY, orientX);
-    camera->inverseOrientation = matrix_invert(camera->orientation);
+    // translation
+    {
+        if ((Flags & SceneKeyForward) == SceneKeyForward) {
+            simd_float4 ax = simd_make_float4(0.0f, 0.0f, -1.0f, 1.0f);
+            simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
+            //camera->origin.
+            
+            simd_float4 scaled = simd_scale_float3(direction, FactorT);
+            simd_float4 result = simd_add_float3(camera->origin, scaled);
+            camera->origin = result;
+        }
+        
+        if ((Flags & SceneKeyBackward) == SceneKeyBackward) {
+            simd_float4 ax = simd_make_float4(0.0f, 0.0f, 1.0f, 1.0f);
+            simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
+            
+            simd_float4 scaled = simd_scale_float3(direction, FactorT);
+            simd_float4 result = simd_add_float3(camera->origin, scaled);
+            camera->origin = result;
+        }
+        
+        camera->origin.w = 1.0f;
+        
+        camera->translation = matrix4x4_translation(-camera->origin.x, -camera->origin.y, -camera->origin.z);
+    }
 }
 
 typedef struct _RasterVertex
@@ -599,7 +679,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     vector_float3 rotationAxis = {1, 1, 0};
     
     matrix_float4x4 modelMatrix = matrix4x4_rotation(_rotation, rotationAxis);
-    matrix_float4x4 translate = matrix4x4_translation(0.0, 0.0, -8.0);
+    matrix_float4x4 translate = matrix_multiply(fpsCamera.translation, matrix4x4_translation(0.0, 0.0, -8.0));
     matrix_float4x4 viewMatrix = matrix_multiply(fpsCamera.orientation, translate);
     
     uniforms->modelViewMatrix = matrix_multiply(viewMatrix, modelMatrix);
@@ -692,7 +772,8 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 {
     NSPoint mouseLoc = view.window.mouseLocationOutsideOfEventStream;
     
-    FPSCamera_Update(&fpsCamera, mouseLoc.x, mouseLoc.y);
+    
+    FPSCamera_Update(&fpsCamera, mouseLoc.x, mouseLoc.y, ((SceneView*)view).keyFlags);
     
     //NSLog(@"x = %f, y = %f", mouseLoc.x, mouseLoc.y);
     
@@ -772,8 +853,6 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 
     [commandBuffer commit];
 }
-
-
 
 - (void)drawInMTKViewRaster:(nonnull MTKView *)view
 {
