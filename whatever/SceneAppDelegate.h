@@ -7,6 +7,13 @@
 
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
+#import "Renderer.h"
+
+@interface SceneViewController : NSViewController {
+}
+
+@property (atomic, retain) Renderer* renderer;
+@end
 
 @interface SceneWindow : NSWindow {
     
