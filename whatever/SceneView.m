@@ -12,7 +12,9 @@
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
     
-    // Drawing code here.
+    if (self.delegate) {
+        [self.delegate drawInMTKView:self];
+    }
 }
 
 - (void)keyDown:(NSEvent *)theEvent
