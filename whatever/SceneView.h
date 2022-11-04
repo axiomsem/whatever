@@ -12,6 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SceneView : MTKView
 
+- (bool)hasCharKeyDown:(char)character;
+
 - (void)keyDown:(NSEvent *)theEvent;
 -(id)initWithFrame:(NSRect)frame;
 - (BOOL)acceptsFirstResponder;
