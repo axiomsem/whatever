@@ -295,11 +295,21 @@ static void load_obj(MeshData* outMeshData)
             {
                 for (size_t i = 0; i < mesh->index_count; ++i) {
                     fastObjIndex* index = &mesh->indices[i];
-                    size_t indicesBase = index->p * 3;
-                    outMeshData->sceneVertices[i].position.x = mesh->positions[indicesBase + 0] * scale;
-                    outMeshData->sceneVertices[i].position.y = mesh->positions[indicesBase + 1] * scale;
-                    outMeshData->sceneVertices[i].position.z = mesh->positions[indicesBase + 2] * scale;
+                    size_t pBase = index->p * 3;
+                    size_t nBase = index->n * 3;
+                    size_t tBase = index->t * 2;
+                    
+                    outMeshData->sceneVertices[i].position.x = mesh->positions[pBase + 0] * scale;
+                    outMeshData->sceneVertices[i].position.y = mesh->positions[pBase + 1] * scale;
+                    outMeshData->sceneVertices[i].position.z = mesh->positions[pBase + 2] * scale;
                     outMeshData->sceneVertices[i].position.w = 1.0f;
+                    
+                    outMeshData->sceneVertices[i].normal.x = mesh->normals[nBase + 0];
+                    outMeshData->sceneVertices[i].normal.y = mesh->normals[nBase + 1];
+                    outMeshData->sceneVertices[i].normal.z = mesh->normals[nBase + 2];
+                    
+                    outMeshData->sceneVertices[i].texture.x = mesh->texcoords[tBase + 0];
+                    outMeshData->sceneVertices[i].texture.y = mesh->texcoords[tBase + 1];
                     
                     float k = (float)(i & ENTROPY);
                     k *= I_ENTROPY;
@@ -465,6 +475,10 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
             _mtlVertexDescriptor.attributes[VertexAttributeSceneColor].format = MTLVertexFormatFloat4;
             _mtlVertexDescriptor.attributes[VertexAttributeSceneColor].offset = offsetof(SceneVertex, color);
             _mtlVertexDescriptor.attributes[VertexAttributeSceneColor].bufferIndex = 0;
+            
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneTexcoord].format = MTLVertexFormatFloat2;
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneTexcoord].offset = offsetof(SceneVertex, texture);
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneTexcoord].bufferIndex = 0;
             
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stride = sizeof(SceneVertex);
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stepRate = 1;
