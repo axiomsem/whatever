@@ -1094,7 +1094,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     /// Respond to drawable size or orientation changes here
 
     float aspect = size.width / (float)size.height;
-    _projectionMatrix = matrix_perspective_right_hand(65.0f * (M_PI / 180.0f), aspect, 0.1f, 100.0f);
+    _projectionMatrix = matrix_perspective_right_hand(65.0f * (M_PI / 180.0f), aspect, 0.1f, 1000.0f);
 }
 
 
