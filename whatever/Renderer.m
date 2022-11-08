@@ -9,6 +9,7 @@
 #import <ModelIO/ModelIO.h>
 #include <string.h>
 #include "sw.h"
+#include "common.h"
 
 #import "SceneView.h"
 #import "Renderer.h"
@@ -16,21 +17,47 @@
 
 // Include header shared between C code here, which executes Metal API commands, and .metal files
 #import "ShaderTypes.h"
+#import "fast_obj.h"
 
 static const NSUInteger kMaxBuffersInFlight = 3;
 
 static const size_t kAlignedUniformsSize = (sizeof(Uniforms) & ~0xFF) + 0x100;
 
-static simd_float4x4 Matrix_RotateY(float angleDegrees)
+static const char* kObjFilename = "Sponza/sponza.obj";
+
+#pragma mark Print Utilities
+
+static void print_float2(const char* name, simd_float2 xy)
 {
-    float angleRad = deg2rad * angleDegrees;
-    
-    simd_float4 r0 = simd_make_float4(cosf(angleRad), 0.0f, sinf(angleRad), 0.0f);
-    simd_float4 r1 = simd_make_float4(0.0f, 1.0f, 0.0f, 0.0f);
-    simd_float4 r2 = simd_make_float4(-sinf(angleRad), 0.0f, cosf(angleRad), 0.0f);
-    simd_float4 r3 = simd_make_float4(0.0f, 0.0f, 0.0f, 1.0f);
-    
-    return simd_matrix_from_rows(r0, r1, r2, r3);
+    // %f is for 64 bit.
+    // don't want to create confusion in
+    // generated assembly for passing the argument.
+    const float x = xy.x;
+    const float y = xy.y;
+    NSLog(@"%s: { %f, %f }", name, x, y);
+}
+
+static void print_float3(const char* name, simd_float3 xyz)
+{
+    // %f is for 64 bit.
+    // don't want to create confusion in
+    // generated assembly for passing the argument.
+    const float x = xyz.x;
+    const float y = xyz.y;
+    const float z = xyz.z;
+    NSLog(@"%s: { %f, %f, %f }", name, x, y, z);
+}
+
+static void print_float4(const char* name, simd_float4 xyzw)
+{
+    // %f is for 64 bit.
+    // don't want to create confusion in
+    // generated assembly for passing the argument.
+    const float x = xyzw.x;
+    const float y = xyzw.y;
+    const float z = xyzw.z;
+    const float w = xyzw.w;
+    NSLog(@"%s: { %f, %f, %f, %f }", name, x, y, z, w);
 }
 
 #pragma mark Matrix Math Utilities
@@ -75,50 +102,7 @@ matrix_float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, f
     }};
 }
 
-simd_float4 simd_add_float3(simd_float4 a, simd_float4 b)
-{
-    simd_float4 c;
-    c.x = a.x + b.x;
-    c.y = a.y + b.y;
-    c.z = a.z + b.z;
-    return c;
-}
 
-simd_float4 simd_sub_float3(simd_float4 a, simd_float4 b)
-{
-    simd_float4 c;
-    c.x = a.x - b.x;
-    c.y = a.y - b.y;
-    c.z = a.z - b.z;
-    return c;
-}
-
-simd_float4 simd_dot_float3(simd_float4 a, simd_float4 b)
-{
-    simd_float4 c;
-    c.x = a.x * b.x;
-    c.y = a.y * b.y;
-    c.z = a.z * b.z;
-    return c.x + c.y + c.z;
-}
-
-simd_float4 simd_scale_float3(simd_float4 a, float b)
-{
-    simd_float4 c;
-    c.x = a.x * b;
-    c.y = a.y * b;
-    c.z = a.z * b;
-    return c;
-}
-
-simd_float4 simd_negate_float3(simd_float4 v)
-{
-    simd_float4 c = v;
-    c.x = -c.x;
-    c.y = -c.y;
-    c.z = -c.z;
-    return c;
-}
 
 typedef struct _FPSCamera
 {
@@ -146,8 +130,6 @@ void FPSCamera_Init(FPSCamera* camera)
     camera->lastMouseX = 0.0f;
     camera->lastMouseY = 0.0f;
 }
-
-
 
 void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFlags Flags)
 {
@@ -179,8 +161,8 @@ void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFla
             simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
             //camera->origin.
             
-            simd_float4 scaled = simd_scale_float3(direction, FactorT);
-            simd_float4 result = simd_add_float3(camera->origin, scaled);
+            simd_float4 scaled = direction * FactorT;
+            simd_float4 result = camera->origin + scaled;
             camera->origin = result;
         }
         
@@ -188,8 +170,27 @@ void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFla
             simd_float4 ax = simd_make_float4(0.0f, 0.0f, 1.0f, 1.0f);
             simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
             
-            simd_float4 scaled = simd_scale_float3(direction, FactorT);
-            simd_float4 result = simd_add_float3(camera->origin, scaled);
+            simd_float4 scaled = direction * FactorT;
+            simd_float4 result = camera->origin + scaled;
+            camera->origin = result;
+        }
+        
+        if ((Flags & SceneKeyLeft) == SceneKeyLeft) {
+            simd_float4 ax = simd_make_float4(0.0f, -1.0f, 0.0f, 1.0f);
+            simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
+            //camera->origin.
+            
+            simd_float4 scaled = direction * FactorT;
+            simd_float4 result = camera->origin + scaled;
+            camera->origin = result;
+        }
+        
+        if ((Flags & SceneKeyRight) == SceneKeyRight) {
+            simd_float4 ax = simd_make_float4(0.0f, 1.0f, 0.0f, 1.0f);
+            simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
+            
+            simd_float4 scaled = direction * FactorT;
+            simd_float4 result = camera->origin + scaled;
             camera->origin = result;
         }
         
@@ -215,6 +216,113 @@ typedef struct _SceneVertex
     simd_float2 texture;
 } SceneVertex;
 
+typedef struct _AABB
+{
+    simd_float3 origin;
+    simd_float3 extents;
+} AABB;
+
+static AABB MakeAABB(simd_float3 min, simd_float3 max)
+{
+    simd_float3 maxToMin = (max - min);
+    simd_float3 ofs = maxToMin * 0.5f;
+    AABB ret = {
+        .origin = min + ofs,
+        .extents = ofs
+    };
+    return ret;
+}
+
+typedef struct _MeshData
+{
+    AABB bounds;
+    // We'll duplicate vertex data for now.
+    // It's not good for performance, but that's ok (for the moment).
+    SceneVertex* sceneVertices;
+    size_t numSceneVertices;
+} MeshData;
+
+static void load_obj(MeshData* outMeshData)
+{
+    NSFileManager *filemgr;
+    NSString *currentPath;
+
+    filemgr = [[NSFileManager alloc] init];
+
+    currentPath = [filemgr currentDirectoryPath];
+    
+    NSLog(@"Reading file %s...", kObjFilename);
+    
+    fastObjMesh* mesh = fast_obj_read(kObjFilename);
+    
+    NSLog(@"Finishing reading file...");
+    
+    const float scale = 1.0f;
+    
+    if (mesh != NULL) {
+        NSLog(@"Allocating memory...");
+        outMeshData->sceneVertices = zalloc(sizeof(SceneVertex) * mesh->index_count);
+
+        if (outMeshData->sceneVertices != NULL) {
+            NSLog(@"Processing vertex data...");
+            outMeshData->numSceneVertices = (size_t)mesh->index_count;
+            
+            const size_t ENTROPY = 7;
+            const float I_ENTROPY = 1.0f / (float)ENTROPY;
+            
+            // Compute bounds
+            {
+                simd_float3 min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MIN);
+                simd_float3 max = simd_make_float3(FLT_MIN, FLT_MIN, FLT_MAX);
+                
+                for (size_t i = 0; i < mesh->position_count; i += 3) {
+                    simd_float3 p = simd_make_float3(mesh->positions[i + 0],
+                                                     mesh->positions[i + 1],
+                                                     mesh->positions[i + 2]);
+                    if (min.x > p.x) min.x = p.x;
+                    if (min.y > p.y) min.y = p.y;
+                    if (min.z < p.z) min.z = p.z;
+                    
+                    if (max.x < p.x) max.x = p.x;
+                    if (max.y < p.y) max.y = p.y;
+                    if (max.z > p.z) max.z = p.z;
+                }
+                
+                outMeshData->bounds = MakeAABB(min, max);
+            }
+            
+            // Generate vertex buffer
+            {
+                for (size_t i = 0; i < mesh->index_count; ++i) {
+                    fastObjIndex* index = &mesh->indices[i];
+                    size_t indicesBase = index->p * 3;
+                    outMeshData->sceneVertices[i].position.x = mesh->positions[indicesBase + 0] * scale;
+                    outMeshData->sceneVertices[i].position.y = mesh->positions[indicesBase + 1] * scale;
+                    outMeshData->sceneVertices[i].position.z = mesh->positions[indicesBase + 2] * scale;
+                    outMeshData->sceneVertices[i].position.w = 1.0f;
+                    
+                    float k = (float)(i & ENTROPY);
+                    k *= I_ENTROPY;
+                    
+                    outMeshData->sceneVertices[i].color.x = k;
+                    outMeshData->sceneVertices[i].color.y = k;
+                    outMeshData->sceneVertices[i].color.z = k;
+                    outMeshData->sceneVertices[i].color.w = 1.0f;
+                }
+            }
+            
+            NSLog(@"Finished processing vertex data...");
+        }
+        else {
+            OOM();
+        }
+    } else {
+        NSLog(@"obj file could not be found");
+        exit(1);
+    }
+}
+
+
 typedef enum _DrawingMode
 {
     // Spinning cube + texture
@@ -223,7 +331,6 @@ typedef enum _DrawingMode
     DrawingModeRaster,
     // Draw a dead simple scene with some effects and an fps camera
     DrawingModeScene
-    
 }
 DrawingMode;
 
@@ -248,6 +355,9 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     Texture *_frameBufferTexture;
     struct swrasterframe frame;
     
+    // from obj
+    MeshData meshData;
+    
     // for any DrawingMode
     uint32_t _uniformBufferOffset;
 
@@ -262,7 +372,15 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     MTKMesh *_mesh;
 }
 
--(nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)view;
+-(void)_sceneStats
+{
+    print_float3("bounds origin", meshData.bounds.origin);
+    print_float3("bounds max", meshData.bounds.origin + meshData.bounds.extents);
+    print_float3("bounds min", meshData.bounds.origin - meshData.bounds.extents);
+    print_float4("camera origin", fpsCamera.origin);
+}
+
+-(nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)view
 {
     self = [super init];
     if(self)
@@ -284,7 +402,10 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 
 - (void)_loadMetalWithView:(nonnull MTKView *)view;
 {
+    memset(&meshData, 0, sizeof(meshData));
+    load_obj(&meshData);
     FPSCamera_Init(&fpsCamera);
+    fpsCamera.origin = simd_make_float4(meshData.bounds.origin, 1.0f);
     
     /// Load Metal state objects and initialize renderer dependent view properties
 
@@ -470,6 +591,15 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     // Sending these as two triangles
     // using NDC pass through coordinates
     
+#if !SCENE_TEST_TRIANGLE
+    
+    const size_t vertexSize = sizeof(meshData.sceneVertices[0]);
+    const size_t sceneVerticesByteSize = meshData.numSceneVertices * vertexSize;
+    
+    _vertexBuffer = [_device newBufferWithBytes:meshData.sceneVertices
+                                         length:sceneVerticesByteSize
+                                        options:MTLResourceOptionCPUCacheModeDefault | MTLResourceStorageModeManaged];
+#else
     const float SIZE = 1.0f;
     
     // pos lower left
@@ -509,6 +639,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     _vertexBuffer = [_device newBufferWithBytes:triangleVertices
                                          length:bufferSize
                                         options:MTLResourceOptionCPUCacheModeDefault | MTLResourceStorageModeManaged];
+#endif
 }
 
 - (void)_loadRasterAssetsWithView:(nonnull MTKView*)view
@@ -679,13 +810,16 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 
     uniforms->projectionMatrix = _projectionMatrix;
 
+#if !SCENE_TEST_TRIANGLE
+    uniforms->modelViewMatrix = matrix_multiply(fpsCamera.orientation, fpsCamera.translation);
+#else
     vector_float3 rotationAxis = {1, 1, 0};
-    
     matrix_float4x4 modelMatrix = matrix4x4_rotation(_rotation, rotationAxis);
     matrix_float4x4 translate = matrix_multiply(fpsCamera.translation, matrix4x4_translation(0.0, 0.0, -8.0));
     matrix_float4x4 viewMatrix = matrix_multiply(fpsCamera.orientation, translate);
-    
     uniforms->modelViewMatrix = matrix_multiply(viewMatrix, modelMatrix);
+#endif
+    
 
     _rotation += .01;
 }
@@ -775,24 +909,15 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 {
     NSPoint mouseLoc = view.window.mouseLocationOutsideOfEventStream;
     
-    
     FPSCamera_Update(&fpsCamera, mouseLoc.x, mouseLoc.y, ((SceneView*)view).keyFlags);
-    
-    //NSLog(@"x = %f, y = %f", mouseLoc.x, mouseLoc.y);
+        
+    [self _sceneStats];
     
     /// Per frame updates here
     if (dispatch_semaphore_wait(_inFlightSemaphore, DISPATCH_TIME_NOW) != 0)
     {
         return;
     }
-    
-    // Will free if frame is already allocated
-    //NSSize sz = view.frame.size;
-   // if (swrasterframe_new(&frame, sz.width, sz.height) == SW_E_FAIL)
-    //{
-      //  NSLog(@"Renderer drawInMTKViewRaster: could not allocate new frame");
-        //return;
-    ///}
     
     [self _updateDynamicBufferState];
 
@@ -811,7 +936,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
      }];
     
  //   _frameBufferTexture = [[Texture alloc] initWithFrame:&frame
- //                                                 device:_device
+ //                                                device:_device
  //                                          commandBuffer:commandBuffer
  //                                                  fence:fence];
  //   _colorMap = [_frameBufferTexture texture];
@@ -826,7 +951,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
         id <MTLRenderCommandEncoder> renderEncoder =
             [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         
-        [renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex | MTLRenderStageFragment | MTLRenderStageTile];
+        //[renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex | MTLRenderStageFragment | MTLRenderStageTile];
         
         renderEncoder.label = @"MyRenderEncoder";
 
@@ -845,7 +970,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
                                 offset:_uniformBufferOffset
                                atIndex:BufferIndexUniforms];
         
-        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3];
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:meshData.numSceneVertices];
 
         [renderEncoder popDebugGroup];
 

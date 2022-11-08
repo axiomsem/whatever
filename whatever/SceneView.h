@@ -12,7 +12,9 @@ NS_ASSUME_NONNULL_BEGIN
 typedef enum _SceneKeyFlags {
     SceneKeyFlagNone = 0,
     SceneKeyForward = 1 << 0,
-    SceneKeyBackward = 1 << 1
+    SceneKeyBackward = 1 << 1,
+    SceneKeyLeft = 1 << 2,
+    SceneKeyRight = 1 << 3
 } SceneKeyFlags;
 
 @interface SceneView : MTKView

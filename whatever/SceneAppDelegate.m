@@ -84,8 +84,6 @@ static NSRect get_frame()
     
     self.view = _sceneView;
     self.renderer = _renderer;
-    
-    [self.renderer drawInMTKView:_sceneView];
 }
 
 @end

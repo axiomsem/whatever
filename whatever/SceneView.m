@@ -41,6 +41,14 @@ typedef bool _KeyBuffer[256];
         _keyFlags |= SceneKeyBackward;
     }
     
+    if (_keys['a']) {
+        _keyFlags |= SceneKeyLeft;
+    }
+    
+    if (_keys['d']) {
+        _keyFlags |= SceneKeyRight;
+    }
+    
     self.keyFlags = _keyFlags;
     
     NSLog(@"onKeyDown Detected; %@", theEvent.characters);
@@ -60,6 +68,14 @@ typedef bool _KeyBuffer[256];
     
     if (!_keys['s']) {
         _keyFlags &= ~SceneKeyBackward;
+    }
+    
+    if (!_keys['a']) {
+        _keyFlags &= ~SceneKeyLeft;
+    }
+    
+    if (!_keys['d']) {
+        _keyFlags &= ~SceneKeyRight;
     }
     
     self.keyFlags = _keyFlags;

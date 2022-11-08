@@ -16,6 +16,7 @@
 		CE78105F28FB71EC00AC3831 /* swcommon.m in Sources */ = {isa = PBXBuildFile; fileRef = CE78105D28FB71EB00AC3831 /* swcommon.m */; };
 		CE78106228FB9C9D00AC3831 /* sw.m in Sources */ = {isa = PBXBuildFile; fileRef = CE78106128FB9C9D00AC3831 /* sw.m */; };
 		CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */ = {isa = PBXBuildFile; fileRef = CE7BC09328FD0DFC002EB35C /* Texture.m */; };
+		CE8B1DFF2915CEBA00857C1A /* fast_obj.c in Sources */ = {isa = PBXBuildFile; fileRef = CE8B1DFE2915CEBA00857C1A /* fast_obj.c */; };
 		CE994BE328EE749A008B8F4A /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = CE994BE228EE749A008B8F4A /* Shaders.metal */; };
 		CE994BE628EE749C008B8F4A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE994BE528EE749C008B8F4A /* Assets.xcassets */; };
 		CE994BF628EE749C008B8F4A /* whateverTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994BF528EE749C008B8F4A /* whateverTests.m */; };
@@ -59,6 +60,8 @@
 		CE78106128FB9C9D00AC3831 /* sw.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = sw.m; sourceTree = "<group>"; };
 		CE7BC09228FD0D74002EB35C /* Texture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Texture.h; sourceTree = "<group>"; };
 		CE7BC09328FD0DFC002EB35C /* Texture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Texture.m; sourceTree = "<group>"; };
+		CE8B1DFD2915CEBA00857C1A /* fast_obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fast_obj.h; sourceTree = "<group>"; };
+		CE8B1DFE2915CEBA00857C1A /* fast_obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fast_obj.c; sourceTree = "<group>"; };
 		CE994BD628EE749A008B8F4A /* whatever.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = whatever.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE994BD928EE749A008B8F4A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		CE994BDC28EE749A008B8F4A /* Renderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
@@ -127,6 +130,8 @@
 		CE994BD828EE749A008B8F4A /* whatever */ = {
 			isa = PBXGroup;
 			children = (
+				CE8B1DFE2915CEBA00857C1A /* fast_obj.c */,
+				CE8B1DFD2915CEBA00857C1A /* fast_obj.h */,
 				CEB59268291380A0009EAC32 /* Main.storyboard */,
 				CE57D2FE2908DC7C00AB1DC4 /* common.h */,
 				CE78106128FB9C9D00AC3831 /* sw.m */,
@@ -312,6 +317,7 @@
 				CE54265A28F9111E003DCCCD /* AppDelegate.m in Sources */,
 				CE78106228FB9C9D00AC3831 /* sw.m in Sources */,
 				CEB59262291374F5009EAC32 /* SceneView.m in Sources */,
+				CE8B1DFF2915CEBA00857C1A /* fast_obj.c in Sources */,
 				CE57D2FD2908C07400AB1DC4 /* common.m in Sources */,
 				CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */,
 				CE54265B28F9111E003DCCCD /* GameViewController.m in Sources */,
