@@ -13,8 +13,8 @@ static NSRect get_frame()
 {
     NSRect e = [[NSScreen mainScreen] frame];
     
-    float szX = 640.0f;
-    float szY = 480.0f;
+    float szX = 1366.0f;
+    float szY = 768.0f;
     
     float halfW = e.size.width / 2.0f;
     float halfH = e.size.height / 2.0f;

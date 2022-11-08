@@ -133,8 +133,8 @@ void FPSCamera_Init(FPSCamera* camera)
 
 void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFlags Flags)
 {
-    const float FactorRot = 0.1f;
-    const float FactorT = 0.1f;
+    const float FactorRot = 1.0f;
+    const float FactorT = 5.0f;
     
     float rotdY = mouseX - camera->lastMouseX;
     float rotdX = mouseY - camera->lastMouseY;
@@ -176,7 +176,7 @@ void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFla
         }
         
         if ((Flags & SceneKeyLeft) == SceneKeyLeft) {
-            simd_float4 ax = simd_make_float4(0.0f, -1.0f, 0.0f, 1.0f);
+            simd_float4 ax = simd_make_float4(-1.0f, 0.0f, 0.0f, 1.0f);
             simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
             //camera->origin.
             
@@ -186,7 +186,7 @@ void FPSCamera_Update(FPSCamera* camera, float mouseX, float mouseY, SceneKeyFla
         }
         
         if ((Flags & SceneKeyRight) == SceneKeyRight) {
-            simd_float4 ax = simd_make_float4(0.0f, 1.0f, 0.0f, 1.0f);
+            simd_float4 ax = simd_make_float4(1.0f, 0.0f, 0.0f, 1.0f);
             simd_float4 direction = matrix_multiply(camera->inverseOrientation, ax);
             
             simd_float4 scaled = direction * FactorT;
@@ -928,7 +928,6 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     
     id<MTLFence> fence = [_device newFence];
 
-
     __block dispatch_semaphore_t block_sema = _inFlightSemaphore;
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer)
      {
@@ -1094,7 +1093,7 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     /// Respond to drawable size or orientation changes here
 
     float aspect = size.width / (float)size.height;
-    _projectionMatrix = matrix_perspective_right_hand(65.0f * (M_PI / 180.0f), aspect, 0.1f, 1000.0f);
+    _projectionMatrix = matrix_perspective_right_hand(65.0f * (M_PI / 180.0f), aspect, 0.1f, 3000.0f);
 }
 
 
