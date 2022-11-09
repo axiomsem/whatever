@@ -45,6 +45,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CE05DA51291C2CA3006986FB /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		CE54265628F9111E003DCCCD /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		CE54265728F9111E003DCCCD /* GameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameViewController.m; sourceTree = "<group>"; };
 		CE54265828F9111E003DCCCD /* Renderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Renderer.m; sourceTree = "<group>"; };
@@ -130,6 +131,7 @@
 		CE994BD828EE749A008B8F4A /* whatever */ = {
 			isa = PBXGroup;
 			children = (
+				CE05DA51291C2CA3006986FB /* stb_image.h */,
 				CE8B1DFE2915CEBA00857C1A /* fast_obj.c */,
 				CE8B1DFD2915CEBA00857C1A /* fast_obj.h */,
 				CEB59268291380A0009EAC32 /* Main.storyboard */,
