@@ -19,6 +19,9 @@
 #import "ShaderTypes.h"
 #import "fast_obj.h"
 
+//#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 static const NSUInteger kMaxBuffersInFlight = 3;
 
 static const size_t kAlignedUniformsSize = (sizeof(Uniforms) & ~0xFF) + 0x100;
@@ -101,8 +104,6 @@ matrix_float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, f
         {  0,   0, nearZ * zs,  0 }
     }};
 }
-
-
 
 typedef struct _FPSCamera
 {
@@ -236,102 +237,13 @@ static AABB MakeAABB(simd_float3 min, simd_float3 max)
 typedef struct _MeshData
 {
     AABB bounds;
+    char** materialImagePaths;
     // We'll duplicate vertex data for now.
     // It's not good for performance, but that's ok (for the moment).
     SceneVertex* sceneVertices;
     size_t numSceneVertices;
+    size_t numMaterialImagePaths;
 } MeshData;
-
-static void load_obj(MeshData* outMeshData)
-{
-    NSFileManager *filemgr;
-    NSString *currentPath;
-
-    filemgr = [[NSFileManager alloc] init];
-
-    currentPath = [filemgr currentDirectoryPath];
-    
-    NSLog(@"Reading file %s...", kObjFilename);
-    
-    fastObjMesh* mesh = fast_obj_read(kObjFilename);
-    
-    NSLog(@"Finishing reading file...");
-    
-    const float scale = 1.0f;
-    
-    if (mesh != NULL) {
-        NSLog(@"Allocating memory...");
-        outMeshData->sceneVertices = zalloc(sizeof(SceneVertex) * mesh->index_count);
-
-        if (outMeshData->sceneVertices != NULL) {
-            NSLog(@"Processing vertex data...");
-            outMeshData->numSceneVertices = (size_t)mesh->index_count;
-            
-            const size_t ENTROPY = 7;
-            const float I_ENTROPY = 1.0f / (float)ENTROPY;
-            
-            // Compute bounds
-            {
-                simd_float3 min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MIN);
-                simd_float3 max = simd_make_float3(FLT_MIN, FLT_MIN, FLT_MAX);
-                
-                for (size_t i = 0; i < mesh->position_count; i += 3) {
-                    simd_float3 p = simd_make_float3(mesh->positions[i + 0],
-                                                     mesh->positions[i + 1],
-                                                     mesh->positions[i + 2]);
-                    if (min.x > p.x) min.x = p.x;
-                    if (min.y > p.y) min.y = p.y;
-                    if (min.z < p.z) min.z = p.z;
-                    
-                    if (max.x < p.x) max.x = p.x;
-                    if (max.y < p.y) max.y = p.y;
-                    if (max.z > p.z) max.z = p.z;
-                }
-                
-                outMeshData->bounds = MakeAABB(min, max);
-            }
-            
-            // Generate vertex buffer
-            {
-                for (size_t i = 0; i < mesh->index_count; ++i) {
-                    fastObjIndex* index = &mesh->indices[i];
-                    size_t pBase = index->p * 3;
-                    size_t nBase = index->n * 3;
-                    size_t tBase = index->t * 2;
-                    
-                    outMeshData->sceneVertices[i].position.x = mesh->positions[pBase + 0] * scale;
-                    outMeshData->sceneVertices[i].position.y = mesh->positions[pBase + 1] * scale;
-                    outMeshData->sceneVertices[i].position.z = mesh->positions[pBase + 2] * scale;
-                    outMeshData->sceneVertices[i].position.w = 1.0f;
-                    
-                    outMeshData->sceneVertices[i].normal.x = mesh->normals[nBase + 0];
-                    outMeshData->sceneVertices[i].normal.y = mesh->normals[nBase + 1];
-                    outMeshData->sceneVertices[i].normal.z = mesh->normals[nBase + 2];
-                    
-                    outMeshData->sceneVertices[i].texture.x = mesh->texcoords[tBase + 0];
-                    outMeshData->sceneVertices[i].texture.y = mesh->texcoords[tBase + 1];
-                    
-                    float k = (float)(i & ENTROPY);
-                    k *= I_ENTROPY;
-                    
-                    outMeshData->sceneVertices[i].color.x = k;
-                    outMeshData->sceneVertices[i].color.y = k;
-                    outMeshData->sceneVertices[i].color.z = k;
-                    outMeshData->sceneVertices[i].color.w = 1.0f;
-                }
-            }
-            
-            NSLog(@"Finished processing vertex data...");
-        }
-        else {
-            OOM();
-        }
-    } else {
-        NSLog(@"obj file could not be found");
-        exit(1);
-    }
-}
-
 
 typedef enum _DrawingMode
 {
@@ -345,6 +257,202 @@ typedef enum _DrawingMode
 DrawingMode;
 
 static const DrawingMode kDrawingMode = DrawingModeScene;
+
+typedef enum _MaterialTextureType
+{
+    MaterialTextureKa = 0,
+    MaterialTextureKd,
+    MaterialTextureKs,
+    MaterialTextureKe,
+    MaterialTextureKt,
+    MaterialTextureNs,
+    MaterialTextureNi,
+    MaterialTextureD,
+    MaterialTextureBump,
+    MaterialTextureTypeCount,
+    MaterialTextureTypeForce64 = 1 << 62
+}
+MaterialTextureType;
+
+static const char* MaterialTextureTypeNames[MaterialTextureTypeCount] =
+{
+    "MaterialTextureKa",
+    "MaterialTextureKd",
+    "MaterialTextureKs",
+    "MaterialTextureKe",
+    "MaterialTextureKt",
+    "MaterialTextureNs",
+    "MaterialTextureNi",
+    "MaterialTextureD",
+    "MaterialTextureBump"
+};
+
+static uintptr_t MaterialTextureTypeOffsets[MaterialTextureTypeCount] =
+{
+    offsetof(fastObjMaterial, map_Ka),
+    offsetof(fastObjMaterial, map_Kd),
+    offsetof(fastObjMaterial, map_Ks),
+    offsetof(fastObjMaterial, map_Ke),
+    offsetof(fastObjMaterial, map_Kt),
+    offsetof(fastObjMaterial, map_Ns),
+    offsetof(fastObjMaterial, map_Ni),
+    offsetof(fastObjMaterial, map_d),
+    offsetof(fastObjMaterial, map_bump)
+};
+
+typedef float* MaterialTextureBuffer;
+
+typedef struct _MaterialTextureData
+{
+    // Power of two
+    MaterialTextureBuffer* images;
+    size_t* widths;
+    size_t* heights;
+    size_t* bytesPerPixels;
+    char** paths;
+    size_t numMaterials;
+    size_t numImages;
+}
+MaterialTextureData;
+
+static bool material_texture_data_alloc(MaterialTextureData* data, size_t numMaterials)
+{
+    data->numMaterials = numMaterials;
+    if (data->numMaterials) {
+        
+        data->images =
+            zalloc(sizeof(MaterialTextureBuffer) * data->numMaterials * MaterialTextureTypeCount);
+        
+        data->widths =
+            zalloc(sizeof(data->widths[0]) * data->numMaterials * MaterialTextureTypeCount);
+        
+        data->heights =
+            zalloc(sizeof(data->heights[0]) * data->numMaterials * MaterialTextureTypeCount);
+        
+        data->bytesPerPixels =
+            zalloc(sizeof(data->bytesPerPixels[0]) * data->numMaterials * MaterialTextureTypeCount);
+        
+        data->paths =
+            zalloc(sizeof(char*) * data->numMaterials * MaterialTextureTypeCount);
+        
+        data->numImages = MaterialTextureTypeCount * data->numMaterials;
+        
+        return
+            (data->images != NULL) &&
+            (data->widths != NULL) &&
+            (data->heights != NULL) &&
+            (data->paths != NULL) &&
+            (data->bytesPerPixels != NULL);
+    }
+    
+    return false;
+}
+
+static bool read_material_texture_image(MaterialTextureData* data,
+                                        size_t material,
+                                        MaterialTextureType type,
+                                        fastObjTexture* textureIn)
+{
+    bool ret = false;
+    
+    size_t i = material * (size_t)type;
+    
+    int w = 0, h = 0, bpp = 0;
+    
+    const char* path =
+        (textureIn->path != NULL)
+        ? (textureIn->path)
+        : (textureIn->name);
+    
+    if (path != NULL) {
+        char buffer[256] = {0};
+        if (path == textureIn->name) {
+            strcat(buffer, "Sponza/");
+            strcat(buffer, path);
+        }
+        else {
+            memcpy(buffer, textureIn->path, strlen(textureIn->path));
+        }
+        
+        data->images[i] = stbi_loadf(textureIn->path, &w, &h, &bpp, 0);
+        data->widths[i] = (size_t)w;
+        data->heights[i] = (size_t)h;
+        data->bytesPerPixels[i] = (size_t)bpp;
+        data->paths[i] = strdup(path);
+        if (data->images[i] != NULL) {
+            NSLog(@"[load_material_texture_data] For %s\n"
+                  @"\ttype = %s\n"
+                  @"\twidth = %lu\n"
+                  @"\theight = %lu\n"
+                  @"\tbytes per pixel = %lu\n",
+                  textureIn->path,
+                  MaterialTextureTypeNames[type],
+                  data->widths[i],
+                  data->heights[i],
+                  data->bytesPerPixels[i]);
+            ret = true;
+        }
+        else {
+            NSLog(@"[load_material_texture_data] Warning: could not load %s of type: %s, material %lu, image %lu/%lu",
+                  path,
+                  MaterialTextureTypeNames[type],
+                  material,
+                  i,
+                  data->numImages);
+        }
+    }
+    else {
+        NSLog(@"[load_material_texture_data] Warning: could not load %s of type: %s, material %lu, image %lu/%lu",
+              path,
+              MaterialTextureTypeNames[type],
+              material,
+              i,
+              data->numImages);
+    }
+    return ret;
+}
+
+static void free_material_texture_data(MaterialTextureData* data)
+{
+    for (size_t i = 0; i < data->numImages; ++i) {
+        if (data->images[i]) {
+            stbi_image_free(data->images[i]);
+        }
+        if (data->paths[i]) {
+            free(data->paths[i]);
+        }
+    }
+    
+    free(data->images);
+    free(data->paths);
+    free(data->bytesPerPixels);
+    free(data->heights);
+    free(data->widths);
+}
+
+static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* obj)
+{
+    size_t imagesLoaded = 0;
+    
+    NSLog(@"[load_material_texture_data] Begin");
+    
+    if (material_texture_data_alloc(data, (size_t)obj->material_count)) {
+        for (size_t i = 0; i < data->numMaterials; i++) {
+            uintptr_t material = (uintptr_t)&obj->materials[i];
+            for (size_t k = 0; k < MaterialTextureTypeCount; ++k) {
+                if (read_material_texture_image(data, i, (MaterialTextureType)k, (fastObjTexture*)(material + MaterialTextureTypeOffsets[k]))) {
+                    imagesLoaded++;
+                }
+            }
+        }
+    }
+    else {
+        OOM();
+    }
+    
+    NSLog(@"[load_material_texture_data] End. %lu/%lu images successfully loaded", imagesLoaded, data->numImages);
+}
+
 
 @implementation Renderer
 {
@@ -367,7 +475,8 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     
     // from obj
     MeshData meshData;
-    
+    fastObjMesh* objMeshData;
+        
     // for any DrawingMode
     uint32_t _uniformBufferOffset;
 
@@ -388,6 +497,96 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
     print_float3("bounds max", meshData.bounds.origin + meshData.bounds.extents);
     print_float3("bounds min", meshData.bounds.origin - meshData.bounds.extents);
     print_float4("camera origin", fpsCamera.origin);
+}
+
+-(void)_loadObj
+{
+    NSFileManager *filemgr;
+    NSString *currentPath;
+
+    filemgr = [[NSFileManager alloc] init];
+
+    currentPath = [filemgr currentDirectoryPath];
+    
+    NSLog(@"Reading file %s...", kObjFilename);
+    
+    objMeshData = fast_obj_read(kObjFilename);
+    
+    NSLog(@"Finishing reading file...");
+    
+    const float scale = 1.0f;
+    
+    if (objMeshData != NULL) {
+        NSLog(@"Allocating memory...");
+        meshData.sceneVertices = zalloc(sizeof(SceneVertex) * objMeshData->index_count);
+
+        if (meshData.sceneVertices != NULL) {
+            NSLog(@"Processing vertex data...");
+            meshData.numSceneVertices = (size_t)objMeshData->index_count;
+            
+            const size_t ENTROPY = 7;
+            const float I_ENTROPY = 1.0f / (float)ENTROPY;
+            
+            // Compute bounds
+            {
+                simd_float3 min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MIN);
+                simd_float3 max = simd_make_float3(FLT_MIN, FLT_MIN, FLT_MAX);
+                
+                for (size_t i = 0; i < objMeshData->position_count; i += 3) {
+                    simd_float3 p = simd_make_float3(objMeshData->positions[i + 0],
+                                                     objMeshData->positions[i + 1],
+                                                     objMeshData->positions[i + 2]);
+                    if (min.x > p.x) min.x = p.x;
+                    if (min.y > p.y) min.y = p.y;
+                    if (min.z < p.z) min.z = p.z;
+                    
+                    if (max.x < p.x) max.x = p.x;
+                    if (max.y < p.y) max.y = p.y;
+                    if (max.z > p.z) max.z = p.z;
+                }
+                
+                meshData.bounds = MakeAABB(min, max);
+            }
+            
+            // Generate vertex buffer
+            {
+                for (size_t i = 0; i < objMeshData->index_count; ++i) {
+                    fastObjIndex* index = &objMeshData->indices[i];
+                    size_t pBase = index->p * 3;
+                    size_t nBase = index->n * 3;
+                    size_t tBase = index->t * 2;
+                    
+                    meshData.sceneVertices[i].position.x = objMeshData->positions[pBase + 0] * scale;
+                    meshData.sceneVertices[i].position.y = objMeshData->positions[pBase + 1] * scale;
+                    meshData.sceneVertices[i].position.z = objMeshData->positions[pBase + 2] * scale;
+                    meshData.sceneVertices[i].position.w = 1.0f;
+                    
+                    meshData.sceneVertices[i].normal.x = objMeshData->normals[nBase + 0];
+                    meshData.sceneVertices[i].normal.y = objMeshData->normals[nBase + 1];
+                    meshData.sceneVertices[i].normal.z = objMeshData->normals[nBase + 2];
+                    
+                    meshData.sceneVertices[i].texture.x = objMeshData->texcoords[tBase + 0];
+                    meshData.sceneVertices[i].texture.y = objMeshData->texcoords[tBase + 1];
+                    
+                    float k = (float)(i & ENTROPY);
+                    k *= I_ENTROPY;
+                    
+                    meshData.sceneVertices[i].color.x = k;
+                    meshData.sceneVertices[i].color.y = k;
+                    meshData.sceneVertices[i].color.z = k;
+                    meshData.sceneVertices[i].color.w = 1.0f;
+                }
+            }
+            
+            NSLog(@"Finished processing vertex data...");
+        }
+        else {
+            OOM();
+        }
+    } else {
+        NSLog(@"obj file could not be found");
+        exit(1);
+    }
 }
 
 -(nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)view
@@ -413,7 +612,11 @@ static const DrawingMode kDrawingMode = DrawingModeScene;
 - (void)_loadMetalWithView:(nonnull MTKView *)view;
 {
     memset(&meshData, 0, sizeof(meshData));
-    load_obj(&meshData);
+    [self _loadObj];
+    MaterialTextureData materialTextureData = {0};
+    load_material_texture_data(&materialTextureData, objMeshData);
+    fast_obj_destroy(objMeshData);
+    free_material_texture_data(&materialTextureData);
     FPSCamera_Init(&fpsCamera);
     fpsCamera.origin = simd_make_float4(meshData.bounds.origin, 1.0f);
     

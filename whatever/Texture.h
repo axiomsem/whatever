@@ -24,6 +24,11 @@
                          commandBuffer:(nonnull id<MTLCommandBuffer>) commandBuffer
                                 fence:(nonnull id<MTLFence>) fence;
 
+- (nonnull instancetype) initArrayFromPaths:(nonnull NSArray<NSString*>*)paths
+                               device:(nonnull id<MTLDevice>) device
+                        commandBuffer:(nonnull id<MTLCommandBuffer>) commandBuffer
+                                      fence:(nonnull id<MTLFence>) fence;
+
 @end
 
 #endif /* Texture_h */
