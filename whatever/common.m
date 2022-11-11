@@ -91,6 +91,16 @@ bool chk_impl(bool value, const char* expr, const char* file, const char* func, 
     return value;
 }
 
+static volatile int NOP_X = 0;
+void __nop(void)
+{
+    volatile int x = 0;
+    x++;
+    x++;
+    x++;
+    NOP_X += x * 3;
+}
+
 const float deg2rad = WPI / 180.0f;
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal)

@@ -46,6 +46,8 @@ bool chk_impl(bool value, const char* expr, const char* file, const char* func, 
 
 float dist_from_point_to_edge(vec2 point, vec2 edge_point, vec2 normal);
 
+void __nop(void);
+
 struct mesh_template
 {
     vec3 triangle[3];
