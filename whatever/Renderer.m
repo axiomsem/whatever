@@ -373,6 +373,9 @@ static bool material_texture_data_alloc(MaterialTextureData* data, size_t numMat
     return false;
 }
 
+//
+// for finding the dimensions of the material
+//
 static const size_t kImageDimMax = 20;
 
 typedef struct _ImageDimsSet
@@ -437,6 +440,9 @@ static void add_dims(size_t w, size_t h)
     }
 }
 
+//
+// for finding the material textures used
+//
 #define MAPINFOBUFSZ 512
 typedef struct _MaterialWhich
 {
@@ -445,14 +451,120 @@ typedef struct _MaterialWhich
     uint8_t exists;
 }
 MaterialMapInfo;
-
 typedef struct _M0
 {
     MaterialMapInfo Materials[SPONZA_NUM_MATERIALS];
 }
 M0;
 
-static M0 WHICH_MATERIALS = {0};
+static M0* WHICH_MATERIALS = NULL;
+
+static size_t dim_to_index(size_t dim)
+{
+    switch (dim)
+    {
+        case 256: return 0; break;
+        case 512: return 1; break;
+        case 1024: return 2; break;
+        case 2048: return 3; break;
+    }
+    
+    // warn, fail
+    return (size_t)CHK(0);
+}
+
+// Material textures available are only this:
+// ambient and diffuse
+typedef enum _UsedMaterialTextureType
+{
+    UsedMaterialTextureKa = 0,
+    UsedMaterialTextureKd,
+    UsedMaterialTextureTypeCount
+}
+UsedMaterialTextureType;
+
+static UsedMaterialTextureType mtt_to_umtt(MaterialTextureType t)
+{
+    switch (t)
+    {
+        case MaterialTextureKa:
+            return UsedMaterialTextureKa;
+            break;
+        case MaterialTextureKd:
+            return UsedMaterialTextureKd;
+            break;
+        default:
+            NSLog(@"UsedMaterialTextureType unknown value");
+            exit(1);
+            break;
+    }
+    return UsedMaterialTextureTypeCount;
+}
+
+typedef struct _TextureMap
+{
+    float* textureBuffers[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount][SPONZA_NUM_MATERIALS];
+    size_t textureArrayNums[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount];
+    size_t textureArrayIndices[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount][SPONZA_NUM_MATERIALS];
+    size_t initialized;
+}
+TextureMap;
+static TextureMap* TEXTURE_ARRAY_INFO = NULL;
+static void add_to_tex_map(float* buffer, size_t bpp, size_t w, size_t h, size_t m, UsedMaterialTextureType type)
+{
+    if (TEXTURE_ARRAY_INFO->initialized == 0) {
+        // assign array numbers
+        {
+            size_t arrayNum = 0;
+            for (size_t i = 0; i < SPONZA_NUM_WIDTHS; ++i) {
+                for (size_t j = 0; j < SPONZA_NUM_HEIGHTS; ++j) {
+                    for (size_t k = 0; i < UsedMaterialTextureTypeCount; ++k) {
+                        TEXTURE_ARRAY_INFO->textureArrayNums[i][j][k] = arrayNum++;
+                    }
+                }
+            }
+        }
+        // assign indices into arrays
+        {
+            size_t indexCounters[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount] = {0};
+            for (size_t i = 0; i < SPONZA_NUM_WIDTHS; ++i) {
+                for (size_t j = 0; j < SPONZA_NUM_HEIGHTS; ++j) {
+                    for (size_t k = 0; i < UsedMaterialTextureTypeCount; ++k) {
+                        for (size_t z = 0; z < SPONZA_NUM_MATERIALS; ++z) {
+                            TEXTURE_ARRAY_INFO->textureArrayIndices[i][j][k][z] = indexCounters[i][j][k]++;
+                        }
+                    }
+                }
+            }
+        }
+        TEXTURE_ARRAY_INFO->initialized = 1;
+    }
+    
+    float* copied = zalloc(w * h * sizeof(float) * 4);
+    if (CHK(copied != NULL)) {
+        size_t iw = dim_to_index(w);
+        size_t ih = dim_to_index(h);
+        TEXTURE_ARRAY_INFO->textureBuffers[iw][ih][type][m] = copied;
+        if (bpp == 3) {
+            size_t len = w * h * 3;
+            size_t j = 0;
+            for (size_t i = 0; i < len; i += 3) {
+                copied[j + 0] = buffer[i + 0];
+                copied[j + 1] = buffer[i + 1];
+                copied[j + 2] = buffer[i + 2];
+                copied[j + 3] = 1.0f;
+                j += 4;
+            }
+        }
+        else if (CHK(bpp == 4)) {
+            memcpy(copied, buffer, w * h * sizeof(float) * 4);
+        }
+        else {
+            NSLog(@"Bad bpp recieved %lu", bpp);
+            exit(1);
+        }
+    }
+}
 
 static void print_materials()
 {
@@ -460,8 +572,8 @@ static void print_materials()
     for (size_t i = 0; i < SPONZA_NUM_MATERIALS; ++i) {
         NSLog(@"\t[%lu][%s] %s\n",
               i,
-              WHICH_MATERIALS.Materials[i].material_name,
-              WHICH_MATERIALS.Materials[i].buffer);
+              WHICH_MATERIALS->Materials[i].material_name,
+              WHICH_MATERIALS->Materials[i].buffer);
     }
     NSLog(@"OK");
 }
@@ -475,7 +587,9 @@ static bool read_material_texture_image(MaterialTextureData* data,
     
     size_t i = material * (size_t)type;
     
-    int w = 0, h = 0, bpp = 0;
+    int w = 0;
+    int h = 0;
+    int bpp = 0;
     
     const char* path =
         (textureIn->path != NULL)
@@ -511,6 +625,12 @@ static bool read_material_texture_image(MaterialTextureData* data,
                       data->bytesPerPixels[i]);
             }
             add_dims(w, h);
+            add_to_tex_map(data->images[i],
+                           data->bytesPerPixels[i],
+                           data->widths[i],
+                           data->heights[i],
+                           material,
+                           mtt_to_umtt(type));
             ret = true;
         }
         else if (data->logWarn) {
@@ -557,16 +677,21 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
     
     NSLog(@"[load_material_texture_data] Begin");
     
+    WHICH_MATERIALS = zalloc(sizeof(WHICH_MATERIALS[0]));
+    CHK(WHICH_MATERIALS != NULL);
+    TEXTURE_ARRAY_INFO = zalloc(sizeof(TEXTURE_ARRAY_INFO[0]));
+    CHK(TEXTURE_ARRAY_INFO != NULL);
+    
     if (CHK(material_texture_data_alloc(data, (size_t)obj->material_count))) {
         for (size_t i = 0; i < data->numMaterials; i++) {
             uintptr_t material = (uintptr_t)&obj->materials[i];
-            strcat(WHICH_MATERIALS.Materials[i].material_name, obj->materials[i].name);
+            strcat(WHICH_MATERIALS->Materials[i].material_name, obj->materials[i].name);
             for (size_t k = 0; k < MaterialTextureTypeCount; ++k) {
                 if (read_material_texture_image(data, i, (MaterialTextureType)k, (fastObjTexture*)(material + MaterialTextureTypeOffsets[k]))) {
                     imagesLoaded++;
-                    WHICH_MATERIALS.Materials[i].exists = true;
-                    strcat(WHICH_MATERIALS.Materials[i].buffer, MaterialTextureTypeNamesMin[k]);
-                    strcat(WHICH_MATERIALS.Materials[i].buffer, ",");
+                    WHICH_MATERIALS->Materials[i].exists = true;
+                    strcat(WHICH_MATERIALS->Materials[i].buffer, MaterialTextureTypeNamesMin[k]);
+                    strcat(WHICH_MATERIALS->Materials[i].buffer, ",");
                 }
             }
         }
