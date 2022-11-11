@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#import <Foundation/Foundation.h>
 
 // exclusive range test
 #define in_range_ex(min, x, max) ((min < (x)) && ((x) < max))
@@ -78,6 +79,16 @@ bool chkres_impl(wresult_t result, const char* expr, const char* file, const cha
     }
     
     return ret;
+}
+
+bool chk_impl(bool value, const char* expr, const char* file, const char* func, int line)
+{
+    if (!value) {
+        NSLog(@"FATAL ERROR for %s. at %s:%s:%i\n", expr, file, func, line);
+        exit(1);
+    }
+    
+    return value;
 }
 
 const float deg2rad = WPI / 180.0f;

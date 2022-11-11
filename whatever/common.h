@@ -26,12 +26,15 @@ void zfree(void** p);
 
 void oom_impl(const char* file, const char* func, int line);
 bool chkres_impl(wresult_t result, const char* expr, const char* file, const char* func, int line);
+bool chk_impl(bool value, const char* expr, const char* file, const char* func, int line);
 
 #define vec2_dot vec2_mul_inner
 
 #define OOM() oom_impl(__FILE__, __func__, __LINE__)
 
 #define CHKRES(expr) chkres_impl(expr, #expr, __FILE__, __func__, __LINE__)
+
+#define CHK(expr) chk_impl(expr, #expr, __FILE__, __func__, __LINE__)
 
 #define COLORF_R { 1.0f, 0.0f, 0.0f, 1.0f }
 #define COLORF_G { 0.0f, 1.0f, 0.0f, 1.0f } 
@@ -96,5 +99,6 @@ struct tri_interp_screen_in
 };
 
 void tri_interp_screen(struct tri_interp_screen_in* input, vec4 output_color);
+
 
 #endif /* common_h */

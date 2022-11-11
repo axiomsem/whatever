@@ -28,6 +28,12 @@ static const size_t kAlignedUniformsSize = (sizeof(Uniforms) & ~0xFF) + 0x100;
 
 static const char* kObjFilename = "Sponza/sponza.obj";
 
+typedef struct _ImageNode
+{
+    
+}
+ImageNode;
+
 #pragma mark Print Utilities
 
 static void print_float2(const char* name, simd_float2 xy)
@@ -287,6 +293,19 @@ static const char* MaterialTextureTypeNames[MaterialTextureTypeCount] =
     "MaterialTextureBump"
 };
 
+static const char* MaterialTextureTypeNamesMin[MaterialTextureTypeCount] =
+{
+    "Ka",
+    "Kd",
+    "Ks",
+    "Ke",
+    "Kt",
+    "Ns",
+    "Ni",
+    "D",
+    "Bump"
+};
+
 static uintptr_t MaterialTextureTypeOffsets[MaterialTextureTypeCount] =
 {
     offsetof(fastObjMaterial, map_Ka),
@@ -312,8 +331,14 @@ typedef struct _MaterialTextureData
     char** paths;
     size_t numMaterials;
     size_t numImages;
+    size_t logInfo;
+    size_t logWarn;
 }
 MaterialTextureData;
+
+#define SPONZA_NUM_MATERIALS 25
+#define SPONZA_NUM_WIDTHS 4
+#define SPONZA_NUM_HEIGHTS 3
 
 static bool material_texture_data_alloc(MaterialTextureData* data, size_t numMaterials)
 {
@@ -348,6 +373,99 @@ static bool material_texture_data_alloc(MaterialTextureData* data, size_t numMat
     return false;
 }
 
+static const size_t kImageDimMax = 20;
+
+typedef struct _ImageDimsSet
+{
+    size_t widths[kImageDimMax];
+    size_t heights[kImageDimMax];
+    size_t wIndex;
+    size_t hIndex;
+}
+ImageDimsSet;
+
+static ImageDimsSet DIMS = { 0 };
+
+static void print_dims()
+{
+    NSLog(@"DIMENSION WIDTHS");
+    for (size_t i = 0; i < DIMS.wIndex; i++) {
+        if (DIMS.widths[i]) {
+            NSLog(@"\t[%lu] %lu", i, DIMS.widths[i]);
+        }
+    }
+    NSLog(@"DIMENSION HEIGHTS");
+    for (size_t i = 0; i < DIMS.hIndex; i++) {
+        if (DIMS.heights[i]) {
+            NSLog(@"\t[%lu] %lu", i, DIMS.heights[i]);
+        }
+    }
+}
+
+static void add_dims(size_t w, size_t h)
+{
+    {
+        bool exists = false;
+        for (size_t i = 0; i < DIMS.wIndex; ++i) {
+            if (DIMS.widths[i] == w) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            if (CHK(DIMS.wIndex < kImageDimMax)) {
+                DIMS.widths[DIMS.wIndex] = w;
+                DIMS.wIndex++;
+            }
+        }
+    }
+    
+    {
+        bool exists = false;
+        for (size_t i = 0; i < DIMS.hIndex; ++i) {
+            if (DIMS.heights[i] == h) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            if (CHK(DIMS.hIndex < kImageDimMax)) {
+                DIMS.heights[DIMS.hIndex] = h;
+                DIMS.hIndex++;
+            }
+        }
+    }
+}
+
+#define MAPINFOBUFSZ 512
+typedef struct _MaterialWhich
+{
+    char material_name[128];
+    char buffer[MAPINFOBUFSZ];
+    uint8_t exists;
+}
+MaterialMapInfo;
+
+typedef struct _M0
+{
+    MaterialMapInfo Materials[SPONZA_NUM_MATERIALS];
+}
+M0;
+
+static M0 WHICH_MATERIALS = {0};
+
+static void print_materials()
+{
+    NSLog(@"MATERIALS");
+    for (size_t i = 0; i < SPONZA_NUM_MATERIALS; ++i) {
+        NSLog(@"\t[%lu][%s] %s\n",
+              i,
+              WHICH_MATERIALS.Materials[i].material_name,
+              WHICH_MATERIALS.Materials[i].buffer);
+    }
+    NSLog(@"OK");
+}
+
 static bool read_material_texture_image(MaterialTextureData* data,
                                         size_t material,
                                         MaterialTextureType type,
@@ -380,19 +498,22 @@ static bool read_material_texture_image(MaterialTextureData* data,
         data->bytesPerPixels[i] = (size_t)bpp;
         data->paths[i] = strdup(path);
         if (data->images[i] != NULL) {
-            NSLog(@"[load_material_texture_data] For %s\n"
-                  @"\ttype = %s\n"
-                  @"\twidth = %lu\n"
-                  @"\theight = %lu\n"
-                  @"\tbytes per pixel = %lu\n",
-                  textureIn->path,
-                  MaterialTextureTypeNames[type],
-                  data->widths[i],
-                  data->heights[i],
-                  data->bytesPerPixels[i]);
+            if (data->logInfo) {
+                NSLog(@"[load_material_texture_data] For %s\n"
+                      @"\ttype = %s\n"
+                      @"\twidth = %lu\n"
+                      @"\theight = %lu\n"
+                      @"\tbytes per pixel = %lu\n",
+                      textureIn->path,
+                      MaterialTextureTypeNames[type],
+                      data->widths[i],
+                      data->heights[i],
+                      data->bytesPerPixels[i]);
+            }
+            add_dims(w, h);
             ret = true;
         }
-        else {
+        else if (data->logWarn) {
             NSLog(@"[load_material_texture_data] Warning: could not load %s of type: %s, material %lu, image %lu/%lu",
                   path,
                   MaterialTextureTypeNames[type],
@@ -401,7 +522,7 @@ static bool read_material_texture_image(MaterialTextureData* data,
                   data->numImages);
         }
     }
-    else {
+    else if (data->logWarn) {
         NSLog(@"[load_material_texture_data] Warning: could not load %s of type: %s, material %lu, image %lu/%lu",
               path,
               MaterialTextureTypeNames[type],
@@ -436,12 +557,16 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
     
     NSLog(@"[load_material_texture_data] Begin");
     
-    if (material_texture_data_alloc(data, (size_t)obj->material_count)) {
+    if (CHK(material_texture_data_alloc(data, (size_t)obj->material_count))) {
         for (size_t i = 0; i < data->numMaterials; i++) {
             uintptr_t material = (uintptr_t)&obj->materials[i];
+            strcat(WHICH_MATERIALS.Materials[i].material_name, obj->materials[i].name);
             for (size_t k = 0; k < MaterialTextureTypeCount; ++k) {
                 if (read_material_texture_image(data, i, (MaterialTextureType)k, (fastObjTexture*)(material + MaterialTextureTypeOffsets[k]))) {
                     imagesLoaded++;
+                    WHICH_MATERIALS.Materials[i].exists = true;
+                    strcat(WHICH_MATERIALS.Materials[i].buffer, MaterialTextureTypeNamesMin[k]);
+                    strcat(WHICH_MATERIALS.Materials[i].buffer, ",");
                 }
             }
         }
@@ -451,6 +576,9 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
     }
     
     NSLog(@"[load_material_texture_data] End. %lu/%lu images successfully loaded", imagesLoaded, data->numImages);
+    
+    print_dims();
+    print_materials();
 }
 
 
@@ -1143,7 +1271,7 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
     id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
     
-    id<MTLFence> fence = [_device newFence];
+  //  id<MTLFence> fence = [_device newFence];
 
     __block dispatch_semaphore_t block_sema = _inFlightSemaphore;
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer)
