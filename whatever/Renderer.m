@@ -973,6 +973,17 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
     const size_t numBytes = numBytesPerImage * SPONZA_NUM_MATERIALS;
     MTLTextureImageBuffer imageArrayBuffer = zalloc(numBytes);
     if (CHK(imageArrayBuffer != NULL)) {
+        // copy each image into the buffer
+        {
+            size_t bufferOffset = 0;
+            for (size_t i = 0; i < SPONZA_NUM_MATERIALS; ++i) {
+                memcpy(imageArrayBuffer + bufferOffset,
+                       TEXTURE_ARRAY_INFO->textureBuffers[width][height][textureType][i],
+                       numBytesPerImage);
+                bufferOffset += numBytesPerImage;
+            }
+        }
+        
         id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
         commandBuffer.label = @"_initTextureArrayFromWidth";
         
