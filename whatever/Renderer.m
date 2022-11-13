@@ -15,6 +15,8 @@
 #import "Renderer.h"
 #import "Texture.h"
 
+#import "mtldata.h"
+
 // Include header shared between C code here, which executes Metal API commands, and .metal files
 #import "ShaderTypes.h"
 #import "fast_obj.h"
@@ -27,12 +29,6 @@ static const NSUInteger kMaxBuffersInFlight = 3;
 static const size_t kAlignedUniformsSize = (sizeof(Uniforms) & ~0xFF) + 0x100;
 
 static const char* kObjFilename = "Sponza/sponza.obj";
-
-typedef struct _ImageNode
-{
-    
-}
-ImageNode;
 
 #pragma mark Print Utilities
 
@@ -319,60 +315,6 @@ static uintptr_t MaterialTextureTypeOffsets[MaterialTextureTypeCount] =
     offsetof(fastObjMaterial, map_bump)
 };
 
-typedef uint8_t* MaterialTextureBuffer;
-
-typedef struct _MaterialTextureData
-{
-    // Power of two
-    MaterialTextureBuffer* images;
-    size_t* widths;
-    size_t* heights;
-    size_t* bytesPerPixels;
-    char** paths;
-    size_t numMaterials;
-    size_t numImages;
-    size_t logInfo;
-    size_t logWarn;
-}
-MaterialTextureData;
-
-#define SPONZA_NUM_MATERIALS 25
-#define SPONZA_NUM_WIDTHS 4
-#define SPONZA_NUM_HEIGHTS 3
-
-static bool material_texture_data_alloc(MaterialTextureData* data, size_t numMaterials)
-{
-    data->numMaterials = numMaterials;
-    if (data->numMaterials) {
-        
-        data->images =
-            zalloc(sizeof(MaterialTextureBuffer) * data->numMaterials * MaterialTextureTypeCount);
-        
-        data->widths =
-            zalloc(sizeof(data->widths[0]) * data->numMaterials * MaterialTextureTypeCount);
-        
-        data->heights =
-            zalloc(sizeof(data->heights[0]) * data->numMaterials * MaterialTextureTypeCount);
-        
-        data->bytesPerPixels =
-            zalloc(sizeof(data->bytesPerPixels[0]) * data->numMaterials * MaterialTextureTypeCount);
-        
-        data->paths =
-            zalloc(sizeof(char*) * data->numMaterials * MaterialTextureTypeCount);
-        
-        data->numImages = MaterialTextureTypeCount * data->numMaterials;
-        
-        return
-            (data->images != NULL) &&
-            (data->widths != NULL) &&
-            (data->heights != NULL) &&
-            (data->paths != NULL) &&
-            (data->bytesPerPixels != NULL);
-    }
-    
-    return false;
-}
-
 //
 // for finding the dimensions of the material
 //
@@ -440,91 +382,27 @@ static void add_dims(size_t w, size_t h)
     }
 }
 
-//
-// for finding the material textures used
-//
-#define MAPINFOBUFSZ 512
-typedef struct _MaterialWhich
-{
-    char material_name[128];
-    char buffer[MAPINFOBUFSZ];
-    uint8_t exists;
-}
-MaterialMapInfo;
-typedef struct _M0
-{
-    MaterialMapInfo Materials[SPONZA_NUM_MATERIALS];
-}
-M0;
-
-static M0* WHICH_MATERIALS = NULL;
-
-static size_t image_dimension_to_tex_array_info_index(size_t dim)
-{
-    switch (dim)
-    {
-        case 256: return 0; break;
-        case 512: return 1; break;
-        case 1024: return 2; break;
-        case 2048: return 3; break;
-    }
-    
-    // warn, fail
-    return (size_t)CHK(false);
-}
-
-static size_t tex_array_info_index_to_image_dimension(size_t index)
-{
-    switch (index)
-    {
-        case 0: return 256; break;
-        case 1: return 512; break;
-        case 2: return 1024; break;
-        case 3: return 2048; break;
-    }
-    
-    // warn, fail
-    return (size_t)CHK(false);
-}
-
 // Material textures available are only this:
 // ambient and diffuse
 typedef enum _UsedMaterialTextureType
 {
-    UsedMaterialTextureKa = 0,
-    UsedMaterialTextureKd,
+    UsedMaterialTextureNormal = 0,
+    UsedMaterialTextureDiffuse,
     UsedMaterialTextureTypeCount
 }
 UsedMaterialTextureType;
 
-static UsedMaterialTextureType mtt_to_umtt(MaterialTextureType t)
-{
-    switch (t)
-    {
-        case MaterialTextureKa:
-            return UsedMaterialTextureKa;
-            break;
-        case MaterialTextureKd:
-            return UsedMaterialTextureKd;
-            break;
-        default:
-            NSLog(@"UsedMaterialTextureType unknown value");
-            exit(1);
-            break;
-    }
-    return UsedMaterialTextureTypeCount;
-}
+typedef float* MTLTextureImageBuffer;
 
-#define MAX_BLANK_TEX_MATERIALS 10
 typedef struct _TextureMap
 {
-    float* textureBuffers[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount][SPONZA_NUM_MATERIALS];
-    size_t textureArrayNums[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount];
-    size_t textureArrayIndices[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount][SPONZA_NUM_MATERIALS];
-    size_t blankTexMaterialIndices[MAX_BLANK_TEX_MATERIALS];
-    size_t blankTexMaterialCount;
-    size_t textureArrayCount;
-    size_t initialized;
+    MTLTextureImageBuffer imageBuffers[UsedMaterialTextureTypeCount][NUM_MTL_TEXTURE_ENTRIES];
+    size_t widths[NUM_MTL_TEXTURE_ENTRIES];
+    size_t heights[NUM_MTL_TEXTURE_ENTRIES];
+    size_t maxWidth;
+    size_t maxHeight;
+    size_t logWarn;
+    size_t logInfo;
 }
 TextureMap;
 
@@ -532,7 +410,6 @@ static TextureMap* TEXTURE_ARRAY_INFO = NULL;
 
 static const size_t kMTLTextureElemsPerPixel = 4;
 static const size_t kMTLTextureImageBytesPerPixel = sizeof(float) * kMTLTextureElemsPerPixel;
-typedef float* MTLTextureImageBuffer;
 
 static float b2f(uint8_t byte)
 {
@@ -541,21 +418,12 @@ static float b2f(uint8_t byte)
     return ((float)byte) * i255;
 }
 
-static bool needs_blank_texture(size_t index)
-{
-    for (size_t i = 0; i < TEXTURE_ARRAY_INFO->blankTexMaterialCount; ++i) {
-        if (index == TEXTURE_ARRAY_INFO->blankTexMaterialIndices[i]) {
-            return true;
-        }
-    }
-    return false;
-}
-
 // Convert input texture image from stb, which is per byte,
 // to floating point texture image - this saves time for texturing
 // in metal.
-static MTLTextureImageBuffer stbi_buf_to_mtl_img_buf(MaterialTextureBuffer inputBuffer, size_t width, size_t height, size_t bpp)
+static MTLTextureImageBuffer stbi_buf_to_mtl_img_buf(uint8_t* inputBuffer, size_t width, size_t height, size_t bpp)
 {
+    
     MTLTextureImageBuffer outputBuffer = NULL;
     if (CHK(inputBuffer != nil) && CHK(bpp == 3 || bpp == 4)) {
         outputBuffer = zalloc(width * height * kMTLTextureImageBytesPerPixel);
@@ -570,11 +438,17 @@ static MTLTextureImageBuffer stbi_buf_to_mtl_img_buf(MaterialTextureBuffer input
             outputBuffer[j + 3] = 1.0f;
             j += 4;
         }
+        if (TEXTURE_ARRAY_INFO->maxWidth < width) {
+            TEXTURE_ARRAY_INFO->maxWidth = width;
+        }
+        if (TEXTURE_ARRAY_INFO->maxHeight < height) {
+            TEXTURE_ARRAY_INFO->maxHeight = height;
+        }
     }
     return outputBuffer;
 }
 
-static bool add_to_tex_map(MaterialTextureBuffer inputBuffer,
+static bool add_to_tex_map(uint8_t* inputBuffer,
                            size_t bpp,
                            size_t width,
                            size_t height,
@@ -582,66 +456,44 @@ static bool add_to_tex_map(MaterialTextureBuffer inputBuffer,
                            UsedMaterialTextureType type)
 {
     bool result = false;
-    if (TEXTURE_ARRAY_INFO->initialized == 0) {
-        // assign array numbers
-        {
-            size_t arrayNum = 0;
-            for (size_t i = 0; i < SPONZA_NUM_WIDTHS; ++i) {
-                for (size_t j = 0; j < SPONZA_NUM_HEIGHTS; ++j) {
-                    for (size_t k = 0; k < UsedMaterialTextureTypeCount; ++k) {
-                        TEXTURE_ARRAY_INFO->textureArrayNums[i][j][k] = arrayNum++;
-                    }
-                }
-            }
-        }
-        // assign indices into arrays
-        {
-            size_t indexCounters[SPONZA_NUM_WIDTHS][SPONZA_NUM_HEIGHTS][UsedMaterialTextureTypeCount] = {0};
-            for (size_t i = 0; i < SPONZA_NUM_WIDTHS; ++i) {
-                for (size_t j = 0; j < SPONZA_NUM_HEIGHTS; ++j) {
-                    for (size_t k = 0; k < UsedMaterialTextureTypeCount; ++k) {
-                        for (size_t z = 0; z < SPONZA_NUM_MATERIALS; ++z) {
-                            TEXTURE_ARRAY_INFO->textureArrayIndices[i][j][k][z] = indexCounters[i][j][k]++;
-                            // initialize with a white blank for any materials that
-                            // have zero images for a given texture type
-                            size_t width = tex_array_info_index_to_image_dimension(i);
-                            size_t height = tex_array_info_index_to_image_dimension(i);
-                            MTLTextureImageBuffer blank = zalloc(width * height * kMTLTextureImageBytesPerPixel);
-                            if (CHK(blank != NULL)) {
-                                size_t len = width * height * kMTLTextureElemsPerPixel;
-                                for (size_t p = 0; p < len; p++) {
-                                    blank[p] = 1.0f;
-                                }
-                                TEXTURE_ARRAY_INFO->textureBuffers[i][j][k][z] = blank;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        TEXTURE_ARRAY_INFO->initialized = 1;
-    }
 
     // STBI has a clearer loading mechanism for byte images,
     // so we'll convert to float here and then assign our texture array info from that point
     MTLTextureImageBuffer outputBuffer = stbi_buf_to_mtl_img_buf(inputBuffer, width, height, bpp);
     if (CHK(outputBuffer != NULL)) {
-        result = true;
-        size_t iw = image_dimension_to_tex_array_info_index(width);
-        size_t ih = image_dimension_to_tex_array_info_index(height);
-        if (CHK(TEXTURE_ARRAY_INFO->textureBuffers[iw][ih][type][material] != NULL)) {
-            free(TEXTURE_ARRAY_INFO->textureBuffers[iw][ih][type][material]);
-        }
-        TEXTURE_ARRAY_INFO->textureBuffers[iw][ih][type][material] = outputBuffer;
+        TEXTURE_ARRAY_INFO->imageBuffers[type][material] = outputBuffer;
     }
-    
     return result;
 }
 
-static bool read_material_texture_image(MaterialTextureData* data,
-                                        size_t material,
-                                        MaterialTextureType type,
-                                        fastObjTexture* textureIn)
+static char PATH_FROM_TEX_BUF[256] = {0};
+
+static const char* path_from_texture(const struct MtlTextures* mtlTextureEntry, UsedMaterialTextureType type)
+{
+    const char* path =
+        (type == UsedMaterialTextureDiffuse)
+        ? (mtlTextureEntry->diffuse)
+        : (mtlTextureEntry->normal);
+    
+    if (path != NULL) {
+        memset(PATH_FROM_TEX_BUF, 0, sizeof(PATH_FROM_TEX_BUF));
+        strcat(PATH_FROM_TEX_BUF, "Sponza/");
+        strcat(PATH_FROM_TEX_BUF, path);
+        return PATH_FROM_TEX_BUF;
+    }
+    
+    return NULL;
+}
+
+static const char* UsedMaterialTextureTypeNames[UsedMaterialTextureTypeCount] =
+{
+    "normal",
+    "diffuse"
+};
+
+static bool read_material_texture_image(size_t material,
+                                        const struct MtlTextures* mtlTextureEntry,
+                                        UsedMaterialTextureType type)
 {
     bool ret = false;
     
@@ -651,147 +503,83 @@ static bool read_material_texture_image(MaterialTextureData* data,
     int h = 0;
     int bpp = 0;
     
-    const char* path =
-        (textureIn->path != NULL)
-        ? (textureIn->path)
-        : (textureIn->name);
-    
+    const char* path = path_from_texture(mtlTextureEntry, type);
     if (path != NULL) {
-        char buffer[256] = {0};
-        if (path == textureIn->name) {
-            strcat(buffer, "Sponza/");
-            strcat(buffer, path);
-        }
-        else {
-            memcpy(buffer, textureIn->path, strlen(textureIn->path));
-        }
-        
-        data->images[i] = stbi_load(textureIn->path, &w, &h, &bpp, 0);
-        data->widths[i] = (size_t)w;
-        data->heights[i] = (size_t)h;
-        data->bytesPerPixels[i] = (size_t)bpp;
-        data->paths[i] = strdup(path);
-        if (data->images[i] != NULL) {
-            if (data->logInfo) {
+        uint8_t* buffer = stbi_load(path, &w, &h, &bpp, 0);
+        if (buffer != NULL) {
+            size_t width = (size_t)w;
+            size_t height = (size_t)h;
+            size_t bytesPerPixel = (size_t)bpp;
+            if (TEXTURE_ARRAY_INFO->logInfo) {
                 NSLog(@"[load_material_texture_data] For %s\n"
                       @"\ttype = %s\n"
                       @"\twidth = %lu\n"
                       @"\theight = %lu\n"
                       @"\tbytes per pixel = %lu\n",
-                      textureIn->path,
-                      MaterialTextureTypeNames[type],
-                      data->widths[i],
-                      data->heights[i],
-                      data->bytesPerPixels[i]);
+                      path,
+                      UsedMaterialTextureTypeNames[type],
+                      width,
+                      height,
+                      bytesPerPixel);
             }
             add_dims(w, h);
-            add_to_tex_map(data->images[i],
-                           data->bytesPerPixels[i],
-                           data->widths[i],
-                           data->heights[i],
+            add_to_tex_map(buffer,
+                           bytesPerPixel,
+                           width,
+                           height,
                            material,
-                           mtt_to_umtt(type));
+                           type);
             ret = true;
         }
-        else if (data->logWarn) {
+        else if (TEXTURE_ARRAY_INFO->logWarn) {
             NSLog(@"[load_material_texture_data] Warning: could not load %s of type: %s, material %lu, image %lu/%lu",
                   path,
                   MaterialTextureTypeNames[type],
                   material,
                   i,
-                  data->numImages);
+                  NUM_MTL_TEXTURE_ENTRIES);
         }
     }
-    else if (data->logWarn) {
+    else if (TEXTURE_ARRAY_INFO->logWarn) {
         NSLog(@"[load_material_texture_data] Warning: could not load %s of type: %s, material %lu, image %lu/%lu",
               path,
               MaterialTextureTypeNames[type],
               material,
               i,
-              data->numImages);
+              NUM_MTL_TEXTURE_ENTRIES);
     }
     return ret;
-}
-
-static void free_material_texture_data(MaterialTextureData* data)
-{
-    for (size_t i = 0; i < data->numImages; ++i) {
-        if (data->images[i]) {
-            stbi_image_free(data->images[i]);
-        }
-        if (data->paths[i]) {
-            free(data->paths[i]);
-        }
-    }
-    
-    free(data->images);
-    free(data->paths);
-    free(data->bytesPerPixels);
-    free(data->heights);
-    free(data->widths);
 }
 
 // Allocate memory for 2 major segments:
 // 1) the images that we actually use (ambient and diffuse - the rest are either off shooted to uniform data or they don't exist)
 // 2) the images that we load through stb image for the sake of converting to a texture sample friendly format (float32 * 4),
 //      which is what 1) stores.
-static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* obj)
+static void load_material_texture_data(fastObjMesh* obj)
 {
     size_t imagesLoaded = 0;
     
     NSLog(@"[load_material_texture_data] Begin");
     
-    WHICH_MATERIALS = zalloc(sizeof(WHICH_MATERIALS[0]));
-    CHK(WHICH_MATERIALS != NULL);
-    TEXTURE_ARRAY_INFO = zalloc(sizeof(TEXTURE_ARRAY_INFO[0]));
+    const size_t texarraysize = sizeof(TEXTURE_ARRAY_INFO[0]);
+    TEXTURE_ARRAY_INFO = zalloc(texarraysize);
     CHK(TEXTURE_ARRAY_INFO != NULL);
     
-    memset(TEXTURE_ARRAY_INFO->blankTexMaterialIndices, UINT64_MAX, sizeof(TEXTURE_ARRAY_INFO->blankTexMaterialIndices));
-    CHK(sizeof(TEXTURE_ARRAY_INFO->blankTexMaterialIndices) == MAX_BLANK_TEX_MATERIALS * sizeof(size_t));
-    
-    // The texture types that we actually use in the sponza image data are ambient and diffuse.
-    //
-    // It's simpler to allow for static values
-    // currently, instead of creating hashmaps/sets etc to dynamically
-    // load arbitrary texture arrays of any width/height setup.
-    if (CHK(material_texture_data_alloc(data, (size_t)obj->material_count))) {
-        for (size_t i = 0; i < data->numMaterials; i++) {
-            strcat(WHICH_MATERIALS->Materials[i].material_name, obj->materials[i].name);
-            // used for determining if we need to fill this with a blank
-            size_t tmp = imagesLoaded;
-            
-            // Load ambient texture
-            if (read_material_texture_image(data, i, MaterialTextureKa, &obj->materials[i].map_Ka)) {
-                imagesLoaded++;
-            }
-            else {
-                NSLog(@"[load_material_texture_data] WARNING: No Ka for %s", obj->materials[i].name);
-            }
-            
-            // Load diffuse texture
-            if (read_material_texture_image(data, i, MaterialTextureKd, &obj->materials[i].map_Kd)) {
-                imagesLoaded++;
-            }
-            else {
-                NSLog(@"[load_material_texture_data] WARNING: No Kd for %s", obj->materials[i].name);
-            }
-            
-            // test if we need to add this to the blank material's index
-            if (tmp == imagesLoaded) {
-                if (CHK(TEXTURE_ARRAY_INFO->blankTexMaterialCount < MAX_BLANK_TEX_MATERIALS)) {
-                    TEXTURE_ARRAY_INFO->blankTexMaterialIndices[TEXTURE_ARRAY_INFO->blankTexMaterialCount] = i;
-                    TEXTURE_ARRAY_INFO->blankTexMaterialCount++;
-                }
-            }
+    for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; i++) {
+        // Load diffuse texture
+        if (!read_material_texture_image(i, &MTL_TEXTURES[i], UsedMaterialTextureDiffuse)) {
+            NSLog(@"[load_material_texture_data] WARNING: No diffuse for image %lu, %s", i,  obj->materials[i].name);
+        }
+        
+        // Load normal texture
+        if (!read_material_texture_image(i, &MTL_TEXTURES[i], UsedMaterialTextureNormal)) {
+            NSLog(@"[load_material_texture_data] WARNING: No normal for image %lu, %s", i,  obj->materials[i].name);
         }
     }
-    else {
-        OOM();
-    }
-    
-    NSLog(@"[load_material_texture_data] End. %lu/%lu potential images successfully loaded", imagesLoaded, data->numImages);
-    
+        
     print_dims();
+    
+    NSLog(@"[load_material_texture_data] End");
 }
 
 @implementation Renderer
@@ -956,30 +744,19 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
     exit(1);
 }
 
-- (NSUInteger)_arrayIndexFromWidth:(NSUInteger)width height:(NSUInteger)height textureType:(UsedMaterialTextureType)textureType
-{
-    size_t sliceOffset = (size_t)textureType * SPONZA_NUM_WIDTHS * SPONZA_NUM_HEIGHTS;
-    size_t relativeIndex = SPONZA_NUM_WIDTHS * height + width;
-    return relativeIndex + sliceOffset;
-}
-
-- (bool)_initTextureArrayForWidth:(size_t)width
-                            height:(size_t)height
-                   usedTextureType:(UsedMaterialTextureType)textureType
+- (bool)_initTextureArrayForType:(UsedMaterialTextureType)textureType
 {
     bool ret = false;
     
-    const size_t numBytesPerImage = width * height * kMTLTextureImageBytesPerPixel;
-    const size_t numBytes = numBytesPerImage * SPONZA_NUM_MATERIALS;
+    const size_t numBytesPerImage = TEXTURE_ARRAY_INFO->maxWidth * TEXTURE_ARRAY_INFO->maxHeight * kMTLTextureImageBytesPerPixel;
+    const size_t numBytes = numBytesPerImage * NUM_MTL_TEXTURE_ENTRIES;
     MTLTextureImageBuffer imageArrayBuffer = zalloc(numBytes);
     if (CHK(imageArrayBuffer != NULL)) {
         // copy each image into the buffer
         {
             size_t bufferOffset = 0;
-            for (size_t i = 0; i < SPONZA_NUM_MATERIALS; ++i) {
-                memcpy(imageArrayBuffer + bufferOffset,
-                       TEXTURE_ARRAY_INFO->textureBuffers[width][height][textureType][i],
-                       numBytesPerImage);
+            for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; ++i) {
+                memcpy(imageArrayBuffer + bufferOffset, TEXTURE_ARRAY_INFO->imageBuffers[textureType][i], numBytesPerImage);
                 bufferOffset += numBytesPerImage;
             }
         }
@@ -990,15 +767,15 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
         MTLTextureDescriptor* descriptor = [[MTLTextureDescriptor alloc] init];
         
         descriptor.depth = 1;
-        descriptor.width = width;
-        descriptor.height = height;
+        descriptor.width = TEXTURE_ARRAY_INFO->maxWidth;
+        descriptor.height = TEXTURE_ARRAY_INFO->maxHeight;
         descriptor.pixelFormat = MTLPixelFormatRGBA32Float;
         descriptor.usage = MTLTextureUsageShaderRead;
         descriptor.sampleCount = 1;
         descriptor.storageMode = MTLStorageModePrivate;
         descriptor.mipmapLevelCount = 1;
         descriptor.textureType = MTLTextureType2DArray;
-        descriptor.arrayLength = SPONZA_NUM_MATERIALS;
+        descriptor.arrayLength = NUM_MTL_TEXTURE_ENTRIES;
 
         id<MTLTexture> texture = [_device newTextureWithDescriptor:descriptor];
         
@@ -1010,11 +787,11 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
         
         [blitEncoder synchronizeResource:stageBuffer];
         
-        const size_t bytesPerRow = kMTLTextureImageBytesPerPixel * width;// * SPONZA_NUM_MATERIALS;
-        MTLSize size = MTLSizeMake(width, height, 1);
+        const size_t bytesPerRow = kMTLTextureImageBytesPerPixel * TEXTURE_ARRAY_INFO->maxWidth;// * SPONZA_NUM_MATERIALS;
+        MTLSize size = MTLSizeMake(TEXTURE_ARRAY_INFO->maxWidth, TEXTURE_ARRAY_INFO->maxHeight, 1);
         MTLOrigin origin = MTLOriginMake(0, 0, 0);
-        for (size_t i = 0; i < SPONZA_NUM_MATERIALS; ++i) {
-            const size_t stageBufferOffset = i * width * height * kMTLTextureImageBytesPerPixel;
+        for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; ++i) {
+            const size_t stageBufferOffset = i * TEXTURE_ARRAY_INFO->maxWidth * TEXTURE_ARRAY_INFO->maxHeight * kMTLTextureImageBytesPerPixel;
             [blitEncoder copyFromBuffer:stageBuffer
                            sourceOffset:stageBufferOffset
                       sourceBytesPerRow:bytesPerRow
@@ -1028,11 +805,13 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
         
         [blitEncoder endEncoding];
         
-        [commandBuffer commit];
+        [commandBuffer commit];X
         [commandBuffer waitUntilCompleted];
         
         free(imageArrayBuffer);
-        [_textureArrays insertObject:texture atIndex:[self _arrayIndexFromWidth:width height:height textureType:textureType]];
+        
+        [_textureArrays insertObject:texture
+                             atIndex:textureType];
     }
         
     return ret;
@@ -1044,17 +823,17 @@ static void load_material_texture_data(MaterialTextureData* data, fastObjMesh* o
 {
     memset(&meshData, 0, sizeof(meshData));
     
-    _textureArrays = [[NSMutableArray alloc] initWithCapacity:SPONZA_NUM_WIDTHS * SPONZA_NUM_HEIGHTS * UsedMaterialTextureTypeCount];
+    _textureArrays = [[NSMutableArray alloc] initWithCapacity:UsedMaterialTextureTypeCount];
+    
     [self _loadObj];
     
-    MaterialTextureData materialTextureData = {0};
-    load_material_texture_data(&materialTextureData, objMeshData);
+    load_material_texture_data(objMeshData);
     fast_obj_destroy(objMeshData);
-    free_material_texture_data(&materialTextureData);
     FPSCamera_Init(&fpsCamera);
     fpsCamera.origin = simd_make_float4(meshData.bounds.origin, 1.0f);
 
-    [self _initTextureArrayForWidth:1024 height:1024 usedTextureType:UsedMaterialTextureKd];
+    [self _initTextureArrayForType: UsedMaterialTextureDiffuse];
+    [self _initTextureArrayForType: UsedMaterialTextureNormal];
     
     /// Load Metal state objects and initialize renderer dependent view properties
 

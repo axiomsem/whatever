@@ -22,6 +22,7 @@
 		CE994BF628EE749C008B8F4A /* whateverTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994BF528EE749C008B8F4A /* whateverTests.m */; };
 		CE994C0028EE749C008B8F4A /* whateverUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994BFF28EE749C008B8F4A /* whateverUITests.m */; };
 		CE994C0228EE749C008B8F4A /* whateverUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CE994C0128EE749C008B8F4A /* whateverUITestsLaunchTests.m */; };
+		CE9BB7B12921975D003BB564 /* mtldata.m in Sources */ = {isa = PBXBuildFile; fileRef = CE9BB7B02921975D003BB564 /* mtldata.m */; };
 		CEB59262291374F5009EAC32 /* SceneView.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB59261291374F5009EAC32 /* SceneView.m */; };
 		CEB5926529137F4C009EAC32 /* SceneAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB5926429137F4C009EAC32 /* SceneAppDelegate.m */; };
 		CEB5926A291380A0009EAC32 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB59268291380A0009EAC32 /* Main.storyboard */; };
@@ -76,6 +77,8 @@
 		CE994BFB28EE749C008B8F4A /* whateverUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = whateverUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE994BFF28EE749C008B8F4A /* whateverUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = whateverUITests.m; sourceTree = "<group>"; };
 		CE994C0128EE749C008B8F4A /* whateverUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = whateverUITestsLaunchTests.m; sourceTree = "<group>"; };
+		CE9BB7AF29219458003BB564 /* mtldata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mtldata.h; sourceTree = "<group>"; };
+		CE9BB7B02921975D003BB564 /* mtldata.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = mtldata.m; sourceTree = "<group>"; };
 		CEB59260291374F5009EAC32 /* SceneView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneView.h; sourceTree = "<group>"; };
 		CEB59261291374F5009EAC32 /* SceneView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneView.m; sourceTree = "<group>"; };
 		CEB5926329137EEF009EAC32 /* SceneAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneAppDelegate.h; sourceTree = "<group>"; };
@@ -161,6 +164,8 @@
 				CEB59261291374F5009EAC32 /* SceneView.m */,
 				CEB5926329137EEF009EAC32 /* SceneAppDelegate.h */,
 				CEB5926429137F4C009EAC32 /* SceneAppDelegate.m */,
+				CE9BB7AF29219458003BB564 /* mtldata.h */,
+				CE9BB7B02921975D003BB564 /* mtldata.m */,
 			);
 			path = whatever;
 			sourceTree = "<group>";
@@ -324,6 +329,7 @@
 				CE7BC09428FD0DFC002EB35C /* Texture.m in Sources */,
 				CE54265B28F9111E003DCCCD /* GameViewController.m in Sources */,
 				CE994BE328EE749A008B8F4A /* Shaders.metal in Sources */,
+				CE9BB7B12921975D003BB564 /* mtldata.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
