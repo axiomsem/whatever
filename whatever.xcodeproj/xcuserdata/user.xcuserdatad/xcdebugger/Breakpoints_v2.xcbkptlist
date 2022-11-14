@@ -30,8 +30,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1487"
-            endingLineNumber = "1487"
+            startingLineNumber = "1519"
+            endingLineNumber = "1519"
             landmarkName = "-drawInMTKViewRaster:"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,8 +46,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1345"
-            endingLineNumber = "1345"
+            startingLineNumber = "1377"
+            endingLineNumber = "1377"
             landmarkName = "-drawInMTKViewScene:"
             landmarkType = "7">
          </BreakpointContent>
@@ -142,8 +142,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1031"
-            endingLineNumber = "1031"
+            startingLineNumber = "1063"
+            endingLineNumber = "1063"
             landmarkName = "-_loadSceneAssetsWithview:"
             landmarkType = "7">
          </BreakpointContent>
@@ -158,8 +158,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1529"
-            endingLineNumber = "1529"
+            startingLineNumber = "1561"
+            endingLineNumber = "1561"
             landmarkName = "-mtkView:drawableSizeWillChange:"
             landmarkType = "7">
          </BreakpointContent>
@@ -206,8 +206,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "734"
-            endingLineNumber = "734"
+            startingLineNumber = "742"
+            endingLineNumber = "742"
             landmarkName = "-initWithMetalKitView:"
             landmarkType = "7">
          </BreakpointContent>
@@ -222,8 +222,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "831"
-            endingLineNumber = "831"
+            startingLineNumber = "863"
+            endingLineNumber = "863"
             landmarkName = "-_loadMetalWithView:"
             landmarkType = "7">
          </BreakpointContent>
@@ -238,8 +238,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "670"
-            endingLineNumber = "670"
+            startingLineNumber = "672"
+            endingLineNumber = "672"
             landmarkName = "-_loadObj"
             landmarkType = "7">
          </BreakpointContent>
@@ -254,8 +254,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "580"
-            endingLineNumber = "580"
+            startingLineNumber = "582"
+            endingLineNumber = "582"
             landmarkName = "load_material_texture_data(obj)"
             landmarkType = "9">
          </BreakpointContent>
@@ -264,14 +264,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "0AB41F52-7AF4-473E-B524-A58E70975A72"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "835"
-            endingLineNumber = "835"
+            startingLineNumber = "867"
+            endingLineNumber = "867"
             landmarkName = "-_loadMetalWithView:"
             landmarkType = "7">
          </BreakpointContent>
@@ -286,8 +286,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "462"
-            endingLineNumber = "462"
+            startingLineNumber = "458"
+            endingLineNumber = "458"
             landmarkName = "add_to_tex_map(inputBuffer, bpp, width, height, material, type)"
             landmarkType = "9">
          </BreakpointContent>
@@ -303,8 +303,8 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "513"
-            endingLineNumber = "513"
+            startingLineNumber = "517"
+            endingLineNumber = "517"
             landmarkName = "read_material_texture_image(material, mtlTextureEntry, type)"
             landmarkType = "9">
          </BreakpointContent>
@@ -313,15 +313,15 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "0001812C-2CF0-4B47-BF29-3F756F88E080"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "566"
-            endingLineNumber = "566"
-            landmarkName = "load_material_texture_data(data, obj)"
+            startingLineNumber = "568"
+            endingLineNumber = "568"
+            landmarkName = "load_material_texture_data(obj)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -335,10 +335,26 @@
             filePath = "whatever/Renderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "525"
-            endingLineNumber = "525"
+            startingLineNumber = "529"
+            endingLineNumber = "529"
             landmarkName = "read_material_texture_image(material, mtlTextureEntry, type)"
             landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "12990D49-986C-4DE4-9A7F-CEB2D737A439"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "whatever/Renderer.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "690"
+            endingLineNumber = "690"
+            landmarkName = "-_loadObj"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

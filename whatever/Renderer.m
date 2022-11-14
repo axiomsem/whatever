@@ -217,6 +217,8 @@ typedef struct _SceneVertex
     simd_float4 color;
     simd_float3 normal;
     simd_float2 texture;
+    // width, height, material index
+    simd_uint3 material;
 } SceneVertex;
 
 typedef struct _AABB
@@ -438,12 +440,6 @@ static MTLTextureImageBuffer stbi_buf_to_mtl_img_buf(uint8_t* inputBuffer, size_
             outputBuffer[j + 3] = 1.0f;
             j += 4;
         }
-        if (TEXTURE_ARRAY_INFO->maxWidth < width) {
-            TEXTURE_ARRAY_INFO->maxWidth = width;
-        }
-        if (TEXTURE_ARRAY_INFO->maxHeight < height) {
-            TEXTURE_ARRAY_INFO->maxHeight = height;
-        }
     }
     return outputBuffer;
 }
@@ -462,6 +458,14 @@ static bool add_to_tex_map(uint8_t* inputBuffer,
     MTLTextureImageBuffer outputBuffer = stbi_buf_to_mtl_img_buf(inputBuffer, width, height, bpp);
     if (CHK(outputBuffer != NULL)) {
         TEXTURE_ARRAY_INFO->imageBuffers[type][material] = outputBuffer;
+        TEXTURE_ARRAY_INFO->widths[material] = width;
+        TEXTURE_ARRAY_INFO->heights[material] = height;
+        if (TEXTURE_ARRAY_INFO->maxWidth < width) {
+            TEXTURE_ARRAY_INFO->maxWidth = width;
+        }
+        if (TEXTURE_ARRAY_INFO->maxHeight < height) {
+            TEXTURE_ARRAY_INFO->maxHeight = height;
+        }
     }
     return result;
 }
@@ -557,8 +561,6 @@ static bool read_material_texture_image(size_t material,
 //      which is what 1) stores.
 static void load_material_texture_data(fastObjMesh* obj)
 {
-    size_t imagesLoaded = 0;
-    
     NSLog(@"[load_material_texture_data] Begin");
     
     const size_t texarraysize = sizeof(TEXTURE_ARRAY_INFO[0]);
@@ -659,8 +661,8 @@ static void load_material_texture_data(fastObjMesh* obj)
             NSLog(@"Processing vertex data...");
             meshData.numSceneVertices = (size_t)objMeshData->index_count;
             
-            const size_t ENTROPY = 7;
-            const float I_ENTROPY = 1.0f / (float)ENTROPY;
+            //const size_t ENTROPY = 7;
+            //const float I_ENTROPY = 1.0f / (float)ENTROPY;
             
             // Compute bounds
             {
@@ -703,12 +705,18 @@ static void load_material_texture_data(fastObjMesh* obj)
                     meshData.sceneVertices[i].texture.x = objMeshData->texcoords[tBase + 0];
                     meshData.sceneVertices[i].texture.y = objMeshData->texcoords[tBase + 1];
                     
-                    float k = (float)(i & ENTROPY);
-                    k *= I_ENTROPY;
+                    //float k = (float)(i & ENTROPY);
+                    //k *= I_ENTROPY;
                     
-                    meshData.sceneVertices[i].color.x = k;
-                    meshData.sceneVertices[i].color.y = k;
-                    meshData.sceneVertices[i].color.z = k;
+                    // material
+                    
+                    uint32_t materialIndex = objMeshData->face_materials[i / 3];
+                    
+                    meshData.sceneVertices[i].material.z = materialIndex;
+                    
+                    meshData.sceneVertices[i].color.x = meshData.sceneVertices[i].normal.x;
+                    meshData.sceneVertices[i].color.y = meshData.sceneVertices[i].normal.y;
+                    meshData.sceneVertices[i].color.z = meshData.sceneVertices[i].normal.z;
                     meshData.sceneVertices[i].color.w = 1.0f;
                 }
             }
@@ -744,20 +752,45 @@ static void load_material_texture_data(fastObjMesh* obj)
     exit(1);
 }
 
+- (void)_loadVertexMaterialInfoFromObjData:(fastObjMesh*)objMeshData
+{
+    for (size_t i = 0; i < meshData.numSceneVertices; ++i) {
+        meshData.sceneVertices[i].material.x = (uint32_t)TEXTURE_ARRAY_INFO->widths[meshData.sceneVertices[i].material.z];
+        meshData.sceneVertices[i].material.y = (uint32_t)TEXTURE_ARRAY_INFO->heights[meshData.sceneVertices[i].material.z];
+    }
+}
+
 - (bool)_initTextureArrayForType:(UsedMaterialTextureType)textureType
 {
     bool ret = false;
     
-    const size_t numBytesPerImage = TEXTURE_ARRAY_INFO->maxWidth * TEXTURE_ARRAY_INFO->maxHeight * kMTLTextureImageBytesPerPixel;
+    const size_t numBytesPerRow = kMTLTextureImageBytesPerPixel * TEXTURE_ARRAY_INFO->maxWidth;
+    const size_t numBytesPerImage = TEXTURE_ARRAY_INFO->maxHeight * numBytesPerRow;
     const size_t numBytes = numBytesPerImage * NUM_MTL_TEXTURE_ENTRIES;
     MTLTextureImageBuffer imageArrayBuffer = zalloc(numBytes);
     if (CHK(imageArrayBuffer != NULL)) {
         // copy each image into the buffer
+        // register keyword usage may or may not make a difference -
+        // this could be looked at further...
         {
-            size_t bufferOffset = 0;
+            size_t currentImage = 0;
+            register uint8_t* byteImageArrayBuffer = (uint8_t*)imageArrayBuffer;
             for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; ++i) {
-                memcpy(imageArrayBuffer + bufferOffset, TEXTURE_ARRAY_INFO->imageBuffers[textureType][i], numBytesPerImage);
-                bufferOffset += numBytesPerImage;
+                const size_t numBytesPerSrcRow = TEXTURE_ARRAY_INFO->widths[i] * kMTLTextureImageBytesPerPixel;
+                const size_t numBytesPerSrcImage = TEXTURE_ARRAY_INFO->heights[i] * numBytesPerSrcRow;
+                // copy each row from the source image into the (likely) larger
+                // destination image slice within the array.
+                {
+                    register uint8_t* srcImageArrayBuffer = (uint8_t*)TEXTURE_ARRAY_INFO->imageBuffers[textureType][i];
+                    register size_t imageOffset = currentImage;
+                    register size_t k = 0;
+                    while (k < numBytesPerSrcImage) {
+                        memcpy(byteImageArrayBuffer + imageOffset, srcImageArrayBuffer + k, numBytesPerSrcRow);
+                        k += numBytesPerSrcRow;
+                        imageOffset += numBytesPerRow;
+                    }
+                }
+                currentImage += numBytesPerImage;
             }
         }
         
@@ -787,14 +820,13 @@ static void load_material_texture_data(fastObjMesh* obj)
         
         [blitEncoder synchronizeResource:stageBuffer];
         
-        const size_t bytesPerRow = kMTLTextureImageBytesPerPixel * TEXTURE_ARRAY_INFO->maxWidth;// * SPONZA_NUM_MATERIALS;
         MTLSize size = MTLSizeMake(TEXTURE_ARRAY_INFO->maxWidth, TEXTURE_ARRAY_INFO->maxHeight, 1);
         MTLOrigin origin = MTLOriginMake(0, 0, 0);
         for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; ++i) {
             const size_t stageBufferOffset = i * TEXTURE_ARRAY_INFO->maxWidth * TEXTURE_ARRAY_INFO->maxHeight * kMTLTextureImageBytesPerPixel;
             [blitEncoder copyFromBuffer:stageBuffer
                            sourceOffset:stageBufferOffset
-                      sourceBytesPerRow:bytesPerRow
+                      sourceBytesPerRow:numBytesPerRow
                     sourceBytesPerImage:numBytesPerImage
                              sourceSize:size
                               toTexture:texture
@@ -805,7 +837,7 @@ static void load_material_texture_data(fastObjMesh* obj)
         
         [blitEncoder endEncoding];
         
-        [commandBuffer commit];X
+        [commandBuffer commit];
         [commandBuffer waitUntilCompleted];
         
         free(imageArrayBuffer);
@@ -832,8 +864,8 @@ static void load_material_texture_data(fastObjMesh* obj)
     FPSCamera_Init(&fpsCamera);
     fpsCamera.origin = simd_make_float4(meshData.bounds.origin, 1.0f);
 
-    [self _initTextureArrayForType: UsedMaterialTextureDiffuse];
-    [self _initTextureArrayForType: UsedMaterialTextureNormal];
+    //[self _initTextureArrayForType: UsedMaterialTextureDiffuse];
+   // [self _initTextureArrayForType: UsedMaterialTextureNormal];
     
     /// Load Metal state objects and initialize renderer dependent view properties
 
