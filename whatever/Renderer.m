@@ -28,6 +28,15 @@ static const NSUInteger kMaxBuffersInFlight = 3;
 
 static const size_t kAlignedUniformsSize = (sizeof(Uniforms) & ~0xFF) + 0x100;
 
+enum SceneColorMode
+{
+    SceneColorModePerNormal = 0,
+    SceneColorModeModulated,
+    SceneColorModeDiffuseTexture
+};
+
+static const enum SceneColorMode kSceneColorMode = SceneColorModeDiffuseTexture;
+
 static const char* kObjFilename = "Sponza/sponza.obj";
 
 #pragma mark Print Utilities
@@ -661,9 +670,6 @@ static void load_material_texture_data(fastObjMesh* obj)
             NSLog(@"Processing vertex data...");
             meshData.numSceneVertices = (size_t)objMeshData->index_count;
             
-            //const size_t ENTROPY = 7;
-            //const float I_ENTROPY = 1.0f / (float)ENTROPY;
-            
             // Compute bounds
             {
                 simd_float3 min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MIN);
@@ -687,6 +693,10 @@ static void load_material_texture_data(fastObjMesh* obj)
             
             // Generate vertex buffer
             {
+                
+                const size_t ENTROPY = 7;
+                const float I_ENTROPY = 1.0f / (float)ENTROPY;
+                
                 for (size_t i = 0; i < objMeshData->index_count; ++i) {
                     fastObjIndex* index = &objMeshData->indices[i];
                     size_t pBase = index->p * 3;
@@ -705,18 +715,39 @@ static void load_material_texture_data(fastObjMesh* obj)
                     meshData.sceneVertices[i].texture.x = objMeshData->texcoords[tBase + 0];
                     meshData.sceneVertices[i].texture.y = objMeshData->texcoords[tBase + 1];
                     
-                    //float k = (float)(i & ENTROPY);
-                    //k *= I_ENTROPY;
-                    
                     // material
                     
                     uint32_t materialIndex = objMeshData->face_materials[i / 3];
                     
                     meshData.sceneVertices[i].material.z = materialIndex;
                     
-                    meshData.sceneVertices[i].color.x = meshData.sceneVertices[i].normal.x;
-                    meshData.sceneVertices[i].color.y = meshData.sceneVertices[i].normal.y;
-                    meshData.sceneVertices[i].color.z = meshData.sceneVertices[i].normal.z;
+ 
+                    switch (kSceneColorMode) {
+                        case SceneColorModePerNormal:
+                        {
+                            meshData.sceneVertices[i].color.x = meshData.sceneVertices[i].normal.x;
+                            meshData.sceneVertices[i].color.y = meshData.sceneVertices[i].normal.y;
+                            meshData.sceneVertices[i].color.z = meshData.sceneVertices[i].normal.z;
+                        }
+                            break;
+                        case SceneColorModeModulated:
+                        {
+                            float k = (float)(i & ENTROPY);
+                            k *= I_ENTROPY;
+                            meshData.sceneVertices[i].color.x = k;
+                            meshData.sceneVertices[i].color.y = k;
+                            meshData.sceneVertices[i].color.z = k;
+                        }
+                            break;
+                        case SceneColorModeDiffuseTexture:
+                        {
+                            meshData.sceneVertices[i].color.x = 1.0f;
+                            meshData.sceneVertices[i].color.y = 1.0f;
+                            meshData.sceneVertices[i].color.z = 1.0f;
+                        }
+                            break;
+                        
+                    }
                     meshData.sceneVertices[i].color.w = 1.0f;
                 }
             }
@@ -760,7 +791,7 @@ static void load_material_texture_data(fastObjMesh* obj)
     }
 }
 
-- (bool)_initTextureArrayForType:(UsedMaterialTextureType)textureType
+- (bool)_initTextureArrayForType:(UsedMaterialTextureType)textureType commandBuffer:(id<MTLCommandBuffer>)commandBuffer fence:(id<MTLFence>)fence
 {
     bool ret = false;
     
@@ -776,26 +807,31 @@ static void load_material_texture_data(fastObjMesh* obj)
             size_t currentImage = 0;
             register uint8_t* byteImageArrayBuffer = (uint8_t*)imageArrayBuffer;
             for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; ++i) {
-                const size_t numBytesPerSrcRow = TEXTURE_ARRAY_INFO->widths[i] * kMTLTextureImageBytesPerPixel;
-                const size_t numBytesPerSrcImage = TEXTURE_ARRAY_INFO->heights[i] * numBytesPerSrcRow;
-                // copy each row from the source image into the (likely) larger
-                // destination image slice within the array.
-                {
-                    register uint8_t* srcImageArrayBuffer = (uint8_t*)TEXTURE_ARRAY_INFO->imageBuffers[textureType][i];
-                    register size_t imageOffset = currentImage;
-                    register size_t k = 0;
-                    while (k < numBytesPerSrcImage) {
-                        memcpy(byteImageArrayBuffer + imageOffset, srcImageArrayBuffer + k, numBytesPerSrcRow);
-                        k += numBytesPerSrcRow;
-                        imageOffset += numBytesPerRow;
+                if (TEXTURE_ARRAY_INFO->imageBuffers[textureType][i] != NULL) {
+                    const size_t numBytesPerSrcRow = TEXTURE_ARRAY_INFO->widths[i] * kMTLTextureImageBytesPerPixel;
+                    const size_t numBytesPerSrcImage = TEXTURE_ARRAY_INFO->heights[i] * numBytesPerSrcRow;
+                    // copy each row from the source image into the (likely) larger
+                    // destination image slice within the array.
+                    // if numbytes per source row is 0, then we know
+                    // that there isn't a width or height for this material,
+                    // which implies that the material isn't associated
+                    // with an image.
+                    if (CHK(numBytesPerSrcRow)) {
+                        register uint8_t* srcImageArrayBuffer = (uint8_t*)TEXTURE_ARRAY_INFO->imageBuffers[textureType][i];
+                        register size_t imageOffset = currentImage;
+                        register size_t k = 0;
+                        while (k < numBytesPerSrcImage) {
+                            memcpy(byteImageArrayBuffer + imageOffset, srcImageArrayBuffer + k, numBytesPerSrcRow);
+                            k += numBytesPerSrcRow;
+                            imageOffset += numBytesPerRow;
+                        }
                     }
                 }
                 currentImage += numBytesPerImage;
             }
         }
         
-        id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-        commandBuffer.label = @"_initTextureArrayFromWidth";
+
         
         MTLTextureDescriptor* descriptor = [[MTLTextureDescriptor alloc] init];
         
@@ -815,15 +851,21 @@ static void load_material_texture_data(fastObjMesh* obj)
         id<MTLBuffer> stageBuffer = [_device newBufferWithBytes:imageArrayBuffer
                                                          length:numBytes
                                                         options:MTLResourceStorageModeManaged];
+    
         
-        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
-        
-        [blitEncoder synchronizeResource:stageBuffer];
+        id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+        commandBuffer.label = @"_initTextureArrayFromWidth";
         
         MTLSize size = MTLSizeMake(TEXTURE_ARRAY_INFO->maxWidth, TEXTURE_ARRAY_INFO->maxHeight, 1);
         MTLOrigin origin = MTLOriginMake(0, 0, 0);
         for (size_t i = 0; i < NUM_MTL_TEXTURE_ENTRIES; ++i) {
+
+            id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+            
+            [blitEncoder synchronizeResource:stageBuffer];
+            
             const size_t stageBufferOffset = i * TEXTURE_ARRAY_INFO->maxWidth * TEXTURE_ARRAY_INFO->maxHeight * kMTLTextureImageBytesPerPixel;
+            
             [blitEncoder copyFromBuffer:stageBuffer
                            sourceOffset:stageBufferOffset
                       sourceBytesPerRow:numBytesPerRow
@@ -833,17 +875,16 @@ static void load_material_texture_data(fastObjMesh* obj)
                        destinationSlice:i
                        destinationLevel:0
                       destinationOrigin:origin];
+            
+            [blitEncoder updateFence:fence];
+            
+            [blitEncoder endEncoding];
+            
         }
-        
-        [blitEncoder endEncoding];
-        
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
-        
+                
         free(imageArrayBuffer);
         
-        [_textureArrays insertObject:texture
-                             atIndex:textureType];
+        [_textureArrays addObject:texture];
     }
         
     return ret;
@@ -855,16 +896,24 @@ static void load_material_texture_data(fastObjMesh* obj)
 {
     memset(&meshData, 0, sizeof(meshData));
     
-    _textureArrays = [[NSMutableArray alloc] initWithCapacity:UsedMaterialTextureTypeCount];
+    _textureArrays = [[NSMutableArray alloc] init];
+
+    
+    id<MTLFence> fence = [_device newFence];
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     
     [self _loadObj];
-    
     load_material_texture_data(objMeshData);
+    [self _loadVertexMaterialInfoFromObjData:objMeshData];
+    [self _initTextureArrayForType: UsedMaterialTextureNormal commandBuffer:commandBuffer fence:fence];
+    [self _initTextureArrayForType: UsedMaterialTextureDiffuse commandBuffer:commandBuffer fence:fence];
     fast_obj_destroy(objMeshData);
     FPSCamera_Init(&fpsCamera);
     fpsCamera.origin = simd_make_float4(meshData.bounds.origin, 1.0f);
+    
+    [commandBuffer ]
 
-    //[self _initTextureArrayForType: UsedMaterialTextureDiffuse];
+    //
    // [self _initTextureArrayForType: UsedMaterialTextureNormal];
     
     /// Load Metal state objects and initialize renderer dependent view properties
@@ -1330,7 +1379,6 @@ static void load_material_texture_data(fastObjMesh* obj)
         [renderEncoder setRenderPipelineState:_pipelineState];
         [renderEncoder setDepthStencilState:_depthState];
 
-            
         [renderEncoder setVertexBuffer:_dynamicUniformBuffer
                                 offset:_uniformBufferOffset
                                atIndex:BufferIndexUniforms];
@@ -1430,6 +1478,11 @@ static void load_material_texture_data(fastObjMesh* obj)
         [renderEncoder setRenderPipelineState:_pipelineState];
         [renderEncoder setDepthStencilState:_depthState];
 
+       // [renderEncoder setFragment]
+        
+        [renderEncoder setFragmentTexture:[_textureArrays objectAtIndex:UsedMaterialTextureDiffuse]
+                                  atIndex:TextureIndexColor];
+        
         [renderEncoder setVertexBuffer:_vertexBuffer
                                 offset:0
                                atIndex:0];

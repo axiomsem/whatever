@@ -56,7 +56,8 @@ typedef struct
 {
     float4 position [[position]];
     float4 color;
-    uint3 material;
+    float2 texcoords;
+    uint arrayIndex;
 } SceneColorInOut;
 
 vertex ColorInOut vertexShader(Vertex in [[stage_in]],
@@ -125,12 +126,24 @@ vertex SceneColorInOut sceneVertexShader(SceneVertex in [[stage_in]],
 
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * in.position;
     out.color = in.color;
-    out.material = in.material;
+    float dX = (float)in.material.x;
+    float dY = (float)in.material.y;
+    out.arrayIndex = in.material.z;
+    
+    out.texcoords.x = (in.texCoord.x * dX) / 2048.0f;
+    out.texcoords.y = (in.texCoord.y * dY) / 2048.0f;
 
     return out;
 }
 
-fragment float4 sceneFragmentShader(SceneColorInOut in [[stage_in]])
+fragment float4 sceneFragmentShader(SceneColorInOut in [[stage_in]], texture2d_array<float> colorMap [[texture(TextureIndexColor) ]])
 {
-    return in.color;
+    constexpr sampler colorSampler(mip_filter::none,
+                                   mag_filter::linear,
+                                   min_filter::linear);
+    
+    float4 result = colorMap.sample(colorSampler, in.texcoords, in.arrayIndex);
+    
+    //return float4(in.texcoords.x, in.texcoords.y, (float)in.arrayIndex / 25.0f, 1.0f);
+    return result;
 }

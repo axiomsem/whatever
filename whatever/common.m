@@ -14,7 +14,7 @@
 // exclusive range test
 #define in_range_ex(min, x, max) ((min < (x)) && ((x) < max))
 
-static const size_t k_max_size = 1 << 30;
+static const size_t k_max_size = 1 << 31;
 
 static size_t g_allocated = 0;
 
