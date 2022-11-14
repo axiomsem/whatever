@@ -35,6 +35,7 @@ typedef struct
     float4 color [[attribute(VertexAttributeSceneColor)]];
     float3 normal [[attribute(VertexAttributeSceneNormal)]];
     float2 texCoord [[attribute(VertexAttributeSceneTexcoord)]];
+    uint3 material [[attribute(VertexAttributeSceneMaterial)]];
 } SceneVertex;
 
 typedef struct
@@ -55,6 +56,7 @@ typedef struct
 {
     float4 position [[position]];
     float4 color;
+    uint3 material;
 } SceneColorInOut;
 
 vertex ColorInOut vertexShader(Vertex in [[stage_in]],
@@ -123,6 +125,7 @@ vertex SceneColorInOut sceneVertexShader(SceneVertex in [[stage_in]],
 
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * in.position;
     out.color = in.color;
+    out.material = in.material;
 
     return out;
 }

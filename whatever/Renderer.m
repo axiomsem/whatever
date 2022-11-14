@@ -930,6 +930,10 @@ static void load_material_texture_data(fastObjMesh* obj)
             _mtlVertexDescriptor.attributes[VertexAttributeSceneTexcoord].offset = offsetof(SceneVertex, texture);
             _mtlVertexDescriptor.attributes[VertexAttributeSceneTexcoord].bufferIndex = 0;
             
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneMaterial].format = MTLVertexFormatUInt3;
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneMaterial].offset = offsetof(SceneVertex, material);
+            _mtlVertexDescriptor.attributes[VertexAttributeSceneMaterial].bufferIndex = 0;
+            
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stride = sizeof(SceneVertex);
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stepRate = 1;
             _mtlVertexDescriptor.layouts[BufferIndexMeshPositions].stepFunction = MTLVertexStepFunctionPerVertex;
