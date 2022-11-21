@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "background.tga",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

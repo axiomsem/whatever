@@ -7,6 +7,53 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B5D1A30C292B441D007A1DCD /* sponza.mtl in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A30A292B441C007A1DCD /* sponza.mtl */; };
+		B5D1A30D292B441D007A1DCD /* sponza.obj in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A30B292B441D007A1DCD /* sponza.obj */; };
+		B5D1A33B292B4456007A1DCD /* sponza_fabric_green_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A30E292B4454007A1DCD /* sponza_fabric_green_diff.tga */; };
+		B5D1A33C292B4456007A1DCD /* vase_dif.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A30F292B4454007A1DCD /* vase_dif.tga */; };
+		B5D1A33D292B4456007A1DCD /* sponza_arch_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A310292B4454007A1DCD /* sponza_arch_ddn.tga */; };
+		B5D1A33E292B4456007A1DCD /* sponza_column_a_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A311292B4454007A1DCD /* sponza_column_a_diff.tga */; };
+		B5D1A33F292B4456007A1DCD /* sponza_thorn_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A312292B4454007A1DCD /* sponza_thorn_ddn.tga */; };
+		B5D1A340292B4456007A1DCD /* vase_round_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A313292B4454007A1DCD /* vase_round_ddn.tga */; };
+		B5D1A341292B4456007A1DCD /* sponza_arch_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A314292B4454007A1DCD /* sponza_arch_diff.tga */; };
+		B5D1A342292B4456007A1DCD /* sponza_curtain_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A315292B4454007A1DCD /* sponza_curtain_ddn.tga */; };
+		B5D1A343292B4456007A1DCD /* vase_plant.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A316292B4454007A1DCD /* vase_plant.tga */; };
+		B5D1A344292B4456007A1DCD /* sponza_curtain_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A317292B4454007A1DCD /* sponza_curtain_diff.tga */; };
+		B5D1A345292B4456007A1DCD /* sponza_curtain_green_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A318292B4454007A1DCD /* sponza_curtain_green_diff.tga */; };
+		B5D1A346292B4456007A1DCD /* sponza_ceiling_a_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A319292B4454007A1DCD /* sponza_ceiling_a_ddn.tga */; };
+		B5D1A347292B4456007A1DCD /* sponza_column_a_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A31A292B4454007A1DCD /* sponza_column_a_ddn.tga */; };
+		B5D1A348292B4456007A1DCD /* spnza_bricks_a_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A31B292B4455007A1DCD /* spnza_bricks_a_ddn.tga */; };
+		B5D1A349292B4456007A1DCD /* sponza_ceiling_a_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A31C292B4455007A1DCD /* sponza_ceiling_a_diff.tga */; };
+		B5D1A34A292B4456007A1DCD /* sponza_column_c_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A31D292B4455007A1DCD /* sponza_column_c_ddn.tga */; };
+		B5D1A34B292B4456007A1DCD /* sponza_fabric_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A31E292B4455007A1DCD /* sponza_fabric_diff.tga */; };
+		B5D1A34C292B4456007A1DCD /* lion2_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A31F292B4455007A1DCD /* lion2_ddn.tga */; };
+		B5D1A34D292B4456007A1DCD /* sponza_flagpole_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A320292B4455007A1DCD /* sponza_flagpole_ddn.tga */; };
+		B5D1A34E292B4456007A1DCD /* sponza_flagpole_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A321292B4455007A1DCD /* sponza_flagpole_diff.tga */; };
+		B5D1A34F292B4456007A1DCD /* vase_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A322292B4455007A1DCD /* vase_ddn.tga */; };
+		B5D1A350292B4456007A1DCD /* sponza_curtain_blue_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A323292B4455007A1DCD /* sponza_curtain_blue_diff.tga */; };
+		B5D1A351292B4456007A1DCD /* vase_round.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A324292B4455007A1DCD /* vase_round.tga */; };
+		B5D1A352292B4456007A1DCD /* chain_texture.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A325292B4455007A1DCD /* chain_texture.tga */; };
+		B5D1A353292B4456007A1DCD /* chain_texture_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A326292B4455007A1DCD /* chain_texture_ddn.tga */; };
+		B5D1A354292B4456007A1DCD /* sponza_details_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A327292B4455007A1DCD /* sponza_details_ddn.tga */; };
+		B5D1A355292B4456007A1DCD /* sponza_roof_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A328292B4455007A1DCD /* sponza_roof_diff.tga */; };
+		B5D1A356292B4456007A1DCD /* sponza_floor_a_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A329292B4455007A1DCD /* sponza_floor_a_ddn.tga */; };
+		B5D1A357292B4456007A1DCD /* Thumbs.db in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A32A292B4455007A1DCD /* Thumbs.db */; };
+		B5D1A358292B4456007A1DCD /* sponza_fabric_blue_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A32B292B4455007A1DCD /* sponza_fabric_blue_diff.tga */; };
+		B5D1A359292B4456007A1DCD /* spnza_bricks_a_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A32C292B4455007A1DCD /* spnza_bricks_a_diff.tga */; };
+		B5D1A35A292B4456007A1DCD /* background.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A32D292B4455007A1DCD /* background.tga */; };
+		B5D1A35B292B4456007A1DCD /* lion_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A32E292B4455007A1DCD /* lion_ddn.tga */; };
+		B5D1A35C292B4456007A1DCD /* sponza_floor_a_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A32F292B4455007A1DCD /* sponza_floor_a_diff.tga */; };
+		B5D1A35D292B4456007A1DCD /* sponza_column_b_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A330292B4455007A1DCD /* sponza_column_b_diff.tga */; };
+		B5D1A35E292B4456007A1DCD /* sponza_details_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A331292B4455007A1DCD /* sponza_details_diff.tga */; };
+		B5D1A35F292B4456007A1DCD /* sponza_roof_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A332292B4455007A1DCD /* sponza_roof_ddn.tga */; };
+		B5D1A360292B4456007A1DCD /* sponza_column_c_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A333292B4455007A1DCD /* sponza_column_c_diff.tga */; };
+		B5D1A361292B4456007A1DCD /* sponza_thorn_diff.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A334292B4455007A1DCD /* sponza_thorn_diff.tga */; };
+		B5D1A362292B4456007A1DCD /* sponza_column_b_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A335292B4455007A1DCD /* sponza_column_b_ddn.tga */; };
+		B5D1A363292B4456007A1DCD /* vase_hanging_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A336292B4456007A1DCD /* vase_hanging_ddn.tga */; };
+		B5D1A364292B4456007A1DCD /* vase_hanging.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A337292B4456007A1DCD /* vase_hanging.tga */; };
+		B5D1A365292B4456007A1DCD /* background_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A338292B4456007A1DCD /* background_ddn.tga */; };
+		B5D1A366292B4456007A1DCD /* lion.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A339292B4456007A1DCD /* lion.tga */; };
+		B5D1A367292B4456007A1DCD /* sponza_fabric_ddn.tga in Resources */ = {isa = PBXBuildFile; fileRef = B5D1A33A292B4456007A1DCD /* sponza_fabric_ddn.tga */; };
 		CE54265A28F9111E003DCCCD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CE54265628F9111E003DCCCD /* AppDelegate.m */; };
 		CE54265B28F9111E003DCCCD /* GameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE54265728F9111E003DCCCD /* GameViewController.m */; };
 		CE54265C28F9111E003DCCCD /* Renderer.m in Sources */ = {isa = PBXBuildFile; fileRef = CE54265828F9111E003DCCCD /* Renderer.m */; };
@@ -46,6 +93,53 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B5D1A30A292B441C007A1DCD /* sponza.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sponza.mtl; path = Sponza/sponza.mtl; sourceTree = "<group>"; };
+		B5D1A30B292B441D007A1DCD /* sponza.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sponza.obj; path = Sponza/sponza.obj; sourceTree = "<group>"; };
+		B5D1A30E292B4454007A1DCD /* sponza_fabric_green_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_fabric_green_diff.tga; path = Sponza/textures/sponza_fabric_green_diff.tga; sourceTree = "<group>"; };
+		B5D1A30F292B4454007A1DCD /* vase_dif.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_dif.tga; path = Sponza/textures/vase_dif.tga; sourceTree = "<group>"; };
+		B5D1A310292B4454007A1DCD /* sponza_arch_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_arch_ddn.tga; path = Sponza/textures/sponza_arch_ddn.tga; sourceTree = "<group>"; };
+		B5D1A311292B4454007A1DCD /* sponza_column_a_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_column_a_diff.tga; path = Sponza/textures/sponza_column_a_diff.tga; sourceTree = "<group>"; };
+		B5D1A312292B4454007A1DCD /* sponza_thorn_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_thorn_ddn.tga; path = Sponza/textures/sponza_thorn_ddn.tga; sourceTree = "<group>"; };
+		B5D1A313292B4454007A1DCD /* vase_round_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_round_ddn.tga; path = Sponza/textures/vase_round_ddn.tga; sourceTree = "<group>"; };
+		B5D1A314292B4454007A1DCD /* sponza_arch_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_arch_diff.tga; path = Sponza/textures/sponza_arch_diff.tga; sourceTree = "<group>"; };
+		B5D1A315292B4454007A1DCD /* sponza_curtain_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_curtain_ddn.tga; path = Sponza/textures/sponza_curtain_ddn.tga; sourceTree = "<group>"; };
+		B5D1A316292B4454007A1DCD /* vase_plant.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_plant.tga; path = Sponza/textures/vase_plant.tga; sourceTree = "<group>"; };
+		B5D1A317292B4454007A1DCD /* sponza_curtain_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_curtain_diff.tga; path = Sponza/textures/sponza_curtain_diff.tga; sourceTree = "<group>"; };
+		B5D1A318292B4454007A1DCD /* sponza_curtain_green_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_curtain_green_diff.tga; path = Sponza/textures/sponza_curtain_green_diff.tga; sourceTree = "<group>"; };
+		B5D1A319292B4454007A1DCD /* sponza_ceiling_a_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_ceiling_a_ddn.tga; path = Sponza/textures/sponza_ceiling_a_ddn.tga; sourceTree = "<group>"; };
+		B5D1A31A292B4454007A1DCD /* sponza_column_a_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_column_a_ddn.tga; path = Sponza/textures/sponza_column_a_ddn.tga; sourceTree = "<group>"; };
+		B5D1A31B292B4455007A1DCD /* spnza_bricks_a_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = spnza_bricks_a_ddn.tga; path = Sponza/textures/spnza_bricks_a_ddn.tga; sourceTree = "<group>"; };
+		B5D1A31C292B4455007A1DCD /* sponza_ceiling_a_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_ceiling_a_diff.tga; path = Sponza/textures/sponza_ceiling_a_diff.tga; sourceTree = "<group>"; };
+		B5D1A31D292B4455007A1DCD /* sponza_column_c_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_column_c_ddn.tga; path = Sponza/textures/sponza_column_c_ddn.tga; sourceTree = "<group>"; };
+		B5D1A31E292B4455007A1DCD /* sponza_fabric_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_fabric_diff.tga; path = Sponza/textures/sponza_fabric_diff.tga; sourceTree = "<group>"; };
+		B5D1A31F292B4455007A1DCD /* lion2_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = lion2_ddn.tga; path = Sponza/textures/lion2_ddn.tga; sourceTree = "<group>"; };
+		B5D1A320292B4455007A1DCD /* sponza_flagpole_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_flagpole_ddn.tga; path = Sponza/textures/sponza_flagpole_ddn.tga; sourceTree = "<group>"; };
+		B5D1A321292B4455007A1DCD /* sponza_flagpole_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_flagpole_diff.tga; path = Sponza/textures/sponza_flagpole_diff.tga; sourceTree = "<group>"; };
+		B5D1A322292B4455007A1DCD /* vase_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_ddn.tga; path = Sponza/textures/vase_ddn.tga; sourceTree = "<group>"; };
+		B5D1A323292B4455007A1DCD /* sponza_curtain_blue_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_curtain_blue_diff.tga; path = Sponza/textures/sponza_curtain_blue_diff.tga; sourceTree = "<group>"; };
+		B5D1A324292B4455007A1DCD /* vase_round.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_round.tga; path = Sponza/textures/vase_round.tga; sourceTree = "<group>"; };
+		B5D1A325292B4455007A1DCD /* chain_texture.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = chain_texture.tga; path = Sponza/textures/chain_texture.tga; sourceTree = "<group>"; };
+		B5D1A326292B4455007A1DCD /* chain_texture_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = chain_texture_ddn.tga; path = Sponza/textures/chain_texture_ddn.tga; sourceTree = "<group>"; };
+		B5D1A327292B4455007A1DCD /* sponza_details_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_details_ddn.tga; path = Sponza/textures/sponza_details_ddn.tga; sourceTree = "<group>"; };
+		B5D1A328292B4455007A1DCD /* sponza_roof_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_roof_diff.tga; path = Sponza/textures/sponza_roof_diff.tga; sourceTree = "<group>"; };
+		B5D1A329292B4455007A1DCD /* sponza_floor_a_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_floor_a_ddn.tga; path = Sponza/textures/sponza_floor_a_ddn.tga; sourceTree = "<group>"; };
+		B5D1A32A292B4455007A1DCD /* Thumbs.db */ = {isa = PBXFileReference; lastKnownFileType = file; name = Thumbs.db; path = Sponza/textures/Thumbs.db; sourceTree = "<group>"; };
+		B5D1A32B292B4455007A1DCD /* sponza_fabric_blue_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_fabric_blue_diff.tga; path = Sponza/textures/sponza_fabric_blue_diff.tga; sourceTree = "<group>"; };
+		B5D1A32C292B4455007A1DCD /* spnza_bricks_a_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = spnza_bricks_a_diff.tga; path = Sponza/textures/spnza_bricks_a_diff.tga; sourceTree = "<group>"; };
+		B5D1A32D292B4455007A1DCD /* background.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = background.tga; path = Sponza/textures/background.tga; sourceTree = "<group>"; };
+		B5D1A32E292B4455007A1DCD /* lion_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = lion_ddn.tga; path = Sponza/textures/lion_ddn.tga; sourceTree = "<group>"; };
+		B5D1A32F292B4455007A1DCD /* sponza_floor_a_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_floor_a_diff.tga; path = Sponza/textures/sponza_floor_a_diff.tga; sourceTree = "<group>"; };
+		B5D1A330292B4455007A1DCD /* sponza_column_b_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_column_b_diff.tga; path = Sponza/textures/sponza_column_b_diff.tga; sourceTree = "<group>"; };
+		B5D1A331292B4455007A1DCD /* sponza_details_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_details_diff.tga; path = Sponza/textures/sponza_details_diff.tga; sourceTree = "<group>"; };
+		B5D1A332292B4455007A1DCD /* sponza_roof_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_roof_ddn.tga; path = Sponza/textures/sponza_roof_ddn.tga; sourceTree = "<group>"; };
+		B5D1A333292B4455007A1DCD /* sponza_column_c_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_column_c_diff.tga; path = Sponza/textures/sponza_column_c_diff.tga; sourceTree = "<group>"; };
+		B5D1A334292B4455007A1DCD /* sponza_thorn_diff.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_thorn_diff.tga; path = Sponza/textures/sponza_thorn_diff.tga; sourceTree = "<group>"; };
+		B5D1A335292B4455007A1DCD /* sponza_column_b_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_column_b_ddn.tga; path = Sponza/textures/sponza_column_b_ddn.tga; sourceTree = "<group>"; };
+		B5D1A336292B4456007A1DCD /* vase_hanging_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_hanging_ddn.tga; path = Sponza/textures/vase_hanging_ddn.tga; sourceTree = "<group>"; };
+		B5D1A337292B4456007A1DCD /* vase_hanging.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = vase_hanging.tga; path = Sponza/textures/vase_hanging.tga; sourceTree = "<group>"; };
+		B5D1A338292B4456007A1DCD /* background_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = background_ddn.tga; path = Sponza/textures/background_ddn.tga; sourceTree = "<group>"; };
+		B5D1A339292B4456007A1DCD /* lion.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = lion.tga; path = Sponza/textures/lion.tga; sourceTree = "<group>"; };
+		B5D1A33A292B4456007A1DCD /* sponza_fabric_ddn.tga */ = {isa = PBXFileReference; lastKnownFileType = file; name = sponza_fabric_ddn.tga; path = Sponza/textures/sponza_fabric_ddn.tga; sourceTree = "<group>"; };
 		CE05DA51291C2CA3006986FB /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		CE54265628F9111E003DCCCD /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		CE54265728F9111E003DCCCD /* GameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameViewController.m; sourceTree = "<group>"; };
@@ -111,6 +205,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B5D1A368292B4461007A1DCD /* New Group */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "New Group";
+			sourceTree = "<group>";
+		};
 		CE994BCD28EE749A008B8F4A = {
 			isa = PBXGroup;
 			children = (
@@ -134,6 +235,54 @@
 		CE994BD828EE749A008B8F4A /* whatever */ = {
 			isa = PBXGroup;
 			children = (
+				B5D1A368292B4461007A1DCD /* New Group */,
+				B5D1A338292B4456007A1DCD /* background_ddn.tga */,
+				B5D1A32D292B4455007A1DCD /* background.tga */,
+				B5D1A326292B4455007A1DCD /* chain_texture_ddn.tga */,
+				B5D1A325292B4455007A1DCD /* chain_texture.tga */,
+				B5D1A32E292B4455007A1DCD /* lion_ddn.tga */,
+				B5D1A339292B4456007A1DCD /* lion.tga */,
+				B5D1A31F292B4455007A1DCD /* lion2_ddn.tga */,
+				B5D1A31B292B4455007A1DCD /* spnza_bricks_a_ddn.tga */,
+				B5D1A32C292B4455007A1DCD /* spnza_bricks_a_diff.tga */,
+				B5D1A310292B4454007A1DCD /* sponza_arch_ddn.tga */,
+				B5D1A314292B4454007A1DCD /* sponza_arch_diff.tga */,
+				B5D1A319292B4454007A1DCD /* sponza_ceiling_a_ddn.tga */,
+				B5D1A31C292B4455007A1DCD /* sponza_ceiling_a_diff.tga */,
+				B5D1A31A292B4454007A1DCD /* sponza_column_a_ddn.tga */,
+				B5D1A311292B4454007A1DCD /* sponza_column_a_diff.tga */,
+				B5D1A335292B4455007A1DCD /* sponza_column_b_ddn.tga */,
+				B5D1A330292B4455007A1DCD /* sponza_column_b_diff.tga */,
+				B5D1A31D292B4455007A1DCD /* sponza_column_c_ddn.tga */,
+				B5D1A333292B4455007A1DCD /* sponza_column_c_diff.tga */,
+				B5D1A323292B4455007A1DCD /* sponza_curtain_blue_diff.tga */,
+				B5D1A315292B4454007A1DCD /* sponza_curtain_ddn.tga */,
+				B5D1A317292B4454007A1DCD /* sponza_curtain_diff.tga */,
+				B5D1A318292B4454007A1DCD /* sponza_curtain_green_diff.tga */,
+				B5D1A327292B4455007A1DCD /* sponza_details_ddn.tga */,
+				B5D1A331292B4455007A1DCD /* sponza_details_diff.tga */,
+				B5D1A32B292B4455007A1DCD /* sponza_fabric_blue_diff.tga */,
+				B5D1A33A292B4456007A1DCD /* sponza_fabric_ddn.tga */,
+				B5D1A31E292B4455007A1DCD /* sponza_fabric_diff.tga */,
+				B5D1A30E292B4454007A1DCD /* sponza_fabric_green_diff.tga */,
+				B5D1A320292B4455007A1DCD /* sponza_flagpole_ddn.tga */,
+				B5D1A321292B4455007A1DCD /* sponza_flagpole_diff.tga */,
+				B5D1A329292B4455007A1DCD /* sponza_floor_a_ddn.tga */,
+				B5D1A32F292B4455007A1DCD /* sponza_floor_a_diff.tga */,
+				B5D1A332292B4455007A1DCD /* sponza_roof_ddn.tga */,
+				B5D1A328292B4455007A1DCD /* sponza_roof_diff.tga */,
+				B5D1A312292B4454007A1DCD /* sponza_thorn_ddn.tga */,
+				B5D1A334292B4455007A1DCD /* sponza_thorn_diff.tga */,
+				B5D1A32A292B4455007A1DCD /* Thumbs.db */,
+				B5D1A322292B4455007A1DCD /* vase_ddn.tga */,
+				B5D1A30F292B4454007A1DCD /* vase_dif.tga */,
+				B5D1A336292B4456007A1DCD /* vase_hanging_ddn.tga */,
+				B5D1A337292B4456007A1DCD /* vase_hanging.tga */,
+				B5D1A316292B4454007A1DCD /* vase_plant.tga */,
+				B5D1A313292B4454007A1DCD /* vase_round_ddn.tga */,
+				B5D1A324292B4455007A1DCD /* vase_round.tga */,
+				B5D1A30A292B441C007A1DCD /* sponza.mtl */,
+				B5D1A30B292B441D007A1DCD /* sponza.obj */,
 				CE05DA51291C2CA3006986FB /* stb_image.h */,
 				CE8B1DFE2915CEBA00857C1A /* fast_obj.c */,
 				CE8B1DFD2915CEBA00857C1A /* fast_obj.h */,
@@ -290,8 +439,55 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5D1A367292B4456007A1DCD /* sponza_fabric_ddn.tga in Resources */,
+				B5D1A33B292B4456007A1DCD /* sponza_fabric_green_diff.tga in Resources */,
+				B5D1A365292B4456007A1DCD /* background_ddn.tga in Resources */,
+				B5D1A35C292B4456007A1DCD /* sponza_floor_a_diff.tga in Resources */,
+				B5D1A359292B4456007A1DCD /* spnza_bricks_a_diff.tga in Resources */,
+				B5D1A362292B4456007A1DCD /* sponza_column_b_ddn.tga in Resources */,
+				B5D1A33C292B4456007A1DCD /* vase_dif.tga in Resources */,
+				B5D1A33F292B4456007A1DCD /* sponza_thorn_ddn.tga in Resources */,
+				B5D1A35F292B4456007A1DCD /* sponza_roof_ddn.tga in Resources */,
+				B5D1A33E292B4456007A1DCD /* sponza_column_a_diff.tga in Resources */,
+				B5D1A34A292B4456007A1DCD /* sponza_column_c_ddn.tga in Resources */,
+				B5D1A33D292B4456007A1DCD /* sponza_arch_ddn.tga in Resources */,
+				B5D1A347292B4456007A1DCD /* sponza_column_a_ddn.tga in Resources */,
+				B5D1A351292B4456007A1DCD /* vase_round.tga in Resources */,
+				B5D1A35D292B4456007A1DCD /* sponza_column_b_diff.tga in Resources */,
+				B5D1A342292B4456007A1DCD /* sponza_curtain_ddn.tga in Resources */,
 				CE994BE628EE749C008B8F4A /* Assets.xcassets in Resources */,
+				B5D1A343292B4456007A1DCD /* vase_plant.tga in Resources */,
+				B5D1A364292B4456007A1DCD /* vase_hanging.tga in Resources */,
+				B5D1A34C292B4456007A1DCD /* lion2_ddn.tga in Resources */,
+				B5D1A34F292B4456007A1DCD /* vase_ddn.tga in Resources */,
+				B5D1A34B292B4456007A1DCD /* sponza_fabric_diff.tga in Resources */,
+				B5D1A353292B4456007A1DCD /* chain_texture_ddn.tga in Resources */,
+				B5D1A341292B4456007A1DCD /* sponza_arch_diff.tga in Resources */,
+				B5D1A34D292B4456007A1DCD /* sponza_flagpole_ddn.tga in Resources */,
+				B5D1A35B292B4456007A1DCD /* lion_ddn.tga in Resources */,
+				B5D1A363292B4456007A1DCD /* vase_hanging_ddn.tga in Resources */,
+				B5D1A356292B4456007A1DCD /* sponza_floor_a_ddn.tga in Resources */,
+				B5D1A34E292B4456007A1DCD /* sponza_flagpole_diff.tga in Resources */,
+				B5D1A361292B4456007A1DCD /* sponza_thorn_diff.tga in Resources */,
+				B5D1A344292B4456007A1DCD /* sponza_curtain_diff.tga in Resources */,
+				B5D1A345292B4456007A1DCD /* sponza_curtain_green_diff.tga in Resources */,
+				B5D1A35E292B4456007A1DCD /* sponza_details_diff.tga in Resources */,
+				B5D1A357292B4456007A1DCD /* Thumbs.db in Resources */,
+				B5D1A355292B4456007A1DCD /* sponza_roof_diff.tga in Resources */,
+				B5D1A30C292B441D007A1DCD /* sponza.mtl in Resources */,
+				B5D1A354292B4456007A1DCD /* sponza_details_ddn.tga in Resources */,
+				B5D1A366292B4456007A1DCD /* lion.tga in Resources */,
+				B5D1A346292B4456007A1DCD /* sponza_ceiling_a_ddn.tga in Resources */,
+				B5D1A348292B4456007A1DCD /* spnza_bricks_a_ddn.tga in Resources */,
+				B5D1A350292B4456007A1DCD /* sponza_curtain_blue_diff.tga in Resources */,
+				B5D1A340292B4456007A1DCD /* vase_round_ddn.tga in Resources */,
+				B5D1A30D292B441D007A1DCD /* sponza.obj in Resources */,
+				B5D1A349292B4456007A1DCD /* sponza_ceiling_a_diff.tga in Resources */,
+				B5D1A35A292B4456007A1DCD /* background.tga in Resources */,
+				B5D1A360292B4456007A1DCD /* sponza_column_c_diff.tga in Resources */,
+				B5D1A352292B4456007A1DCD /* chain_texture.tga in Resources */,
 				CEB5926A291380A0009EAC32 /* Main.storyboard in Resources */,
+				B5D1A358292B4456007A1DCD /* sponza_fabric_blue_diff.tga in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

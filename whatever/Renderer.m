@@ -654,9 +654,17 @@ static void load_material_texture_data(fastObjMesh* obj)
 
     currentPath = [filemgr currentDirectoryPath];
     
-    NSLog(@"Reading file %s...", kObjFilename);
+    NSError* err = nil;
+        
+    NSURL* url = [[[NSBundle mainBundle] resourceURL] URLByAppendingPathComponent:@"sponza.obj"];
+    //NSFileHandle* handle = [NSFileHandle fileHandleForReadingFromURL:url error:&err];
+    NSString* objPath = [url path];
     
-    objMeshData = fast_obj_read(kObjFilename);
+    NSLog(@"Reading file %@...", objPath);
+    
+    const char* path = [objPath cStringUsingEncoding:NSASCIIStringEncoding];
+    
+    objMeshData = fast_obj_read(path);
     
     NSLog(@"Finishing reading file...");
     
@@ -911,7 +919,7 @@ static void load_material_texture_data(fastObjMesh* obj)
     FPSCamera_Init(&fpsCamera);
     fpsCamera.origin = simd_make_float4(meshData.bounds.origin, 1.0f);
     
-    [commandBuffer ]
+    //[commandBuffer ]
 
     //
    // [self _initTextureArrayForType: UsedMaterialTextureNormal];

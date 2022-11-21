@@ -1361,7 +1361,7 @@ void fast_obj_destroy(fastObjMesh* m)
 fastObjMesh* fast_obj_read(const char* path)
 {
     fastObjCallbacks callbacks;
-    callbacks.file_open = file_open;
+     callbacks.file_open = file_open;
     callbacks.file_close = file_close;
     callbacks.file_read = file_read;
     callbacks.file_size = file_size;
